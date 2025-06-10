@@ -1,0 +1,30 @@
+{
+  "name": "will-counter",
+  "version": "1.0.0",
+  "description": "A monorepo for Will Counter application with Kotlin API, React Native frontend, and Supabase database",
+  "private": true,
+  "workspaces": [
+    "api",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "dev:api": "cd api && ./gradlew run",
+    "build:api": "cd api && ./gradlew build",
+    "dev:frontend": "cd frontend && npm start",
+    "android": "cd frontend && npm run android",
+    "ios": "cd frontend && npm run ios",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "install:all": "npm install && cd api && ./gradlew build",
+    "clean": "rm -rf node_modules && rm -rf */node_modules && cd api && ./gradlew clean"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=8"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@will-counter/shared",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  }
+}
