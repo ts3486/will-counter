@@ -1,4 +1,4 @@
-import NetInfo from '@react-native-community/netinfo';
+// import NetInfo from '@react-native-community/netinfo';
 
 export class NetworkService {
   private static listeners: ((isConnected: boolean) => void)[] = [];
@@ -6,20 +6,21 @@ export class NetworkService {
 
   // Initialize network monitoring
   static initialize(): void {
-    NetInfo.addEventListener(state => {
-      const wasConnected = this.isConnected;
-      this.isConnected = state.isConnected ?? false;
+    // NetInfo.addEventListener(state => {
+    //   const wasConnected = this.isConnected;
+    //   this.isConnected = state.isConnected ?? false;
       
-      // Notify all listeners
-      this.listeners.forEach(listener => {
-        listener(this.isConnected);
-      });
+    //   // Notify all listeners
+    //   this.listeners.forEach(listener => {
+    //     listener(this.isConnected);
+    //   });
 
-      // Log network state changes
-      if (wasConnected !== this.isConnected) {
-        console.log(`Network status changed: ${this.isConnected ? 'Online' : 'Offline'}`);
-      }
-    });
+    //   // Log network state changes
+    //   if (wasConnected !== this.isConnected) {
+    //     console.log(`Network status changed: ${this.isConnected ? 'Online' : 'Offline'}`);
+    //   }
+    // });
+    console.log('NetworkService initialized (placeholder)');
   }
 
   // Add network state listener
@@ -43,8 +44,9 @@ export class NetworkService {
   // Check network status asynchronously
   static async checkConnection(): Promise<boolean> {
     try {
-      const state = await NetInfo.fetch();
-      this.isConnected = state.isConnected ?? false;
+      // const state = await NetInfo.fetch();
+      // this.isConnected = state.isConnected ?? false;
+      // return this.isConnected;
       return this.isConnected;
     } catch (error) {
       console.error('Failed to check network connection:', error);

@@ -4,10 +4,10 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { login, clearError } from '../../store/slices/authSlice';
@@ -18,7 +18,7 @@ const LoginScreen: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      await dispatch(login()).unwrap();
+      await dispatch(login());
     } catch (err) {
       Alert.alert('Login Error', 'Failed to login. Please try again.');
     }

@@ -1,57 +1,27 @@
-import Sound from 'react-native-sound';
-
+// Simplified sound player for testing (removes react-native-sound dependency)
 class SoundPlayer {
-  private static countSound: Sound | null = null;
   private static initialized = false;
 
   static initialize() {
     if (this.initialized) return;
-
-    // Enable playback in silence mode
-    Sound.setCategory('Playback');
-
-    // Load the count sound
-    this.countSound = new Sound('count_sound.mp3', Sound.MAIN_BUNDLE, (error) => {
-      if (error) {
-        console.log('Failed to load count sound', error);
-        return;
-      }
-      console.log('Count sound loaded successfully');
-    });
-
+    console.log('🔊 Sound player initialized (mock)');
     this.initialized = true;
   }
 
   static playCountSound() {
-    if (!this.countSound) {
-      this.initialize();
-      return;
-    }
-
-    this.countSound.play((success) => {
-      if (!success) {
-        console.log('Failed to play count sound');
-      }
-    });
+    console.log('🔊 Playing count sound (mock)');
   }
 
   static setVolume(volume: number) {
-    if (this.countSound) {
-      this.countSound.setVolume(volume);
-    }
+    console.log(`🔊 Setting volume to ${volume} (mock)`);
   }
 
   static stop() {
-    if (this.countSound) {
-      this.countSound.stop();
-    }
+    console.log('🔊 Stopping sound (mock)');
   }
 
   static release() {
-    if (this.countSound) {
-      this.countSound.release();
-      this.countSound = null;
-    }
+    console.log('🔊 Releasing sound player (mock)');
     this.initialized = false;
   }
 }

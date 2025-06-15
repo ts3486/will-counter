@@ -1,20 +1,25 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers } from '@reduxjs/toolkit';
+
 import authReducer from './slices/authSlice';
 import willCounterReducer from './slices/willCounterSlice';
 import userReducer from './slices/userSlice';
 
+const rootReducer = combineReducers({
+  auth: authReducer,
+  willCounter: willCounterReducer,
+  user: userReducer,
+});
+
 export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    willCounter: willCounterReducer,
-    user: userReducer,
-  },
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST'],
+        ignoredActions: [],
       },
     }),
+  devTools: __DEV__,
 });
 
 export type RootState = ReturnType<typeof store.getState>;

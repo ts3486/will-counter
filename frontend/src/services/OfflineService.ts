@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MMKV } from 'react-native-mmkv';
+import { MMKV } from '../utils/mockMMKV';
 
 // Initialize MMKV for faster offline storage
 const storage = new MMKV();

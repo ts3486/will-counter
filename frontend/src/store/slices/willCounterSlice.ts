@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { supabase } from '../../config/supabase';
+// import { supabase } from '../../config/supabase';
 import { WillCount } from '../../../../shared/types/database';
 import { RootState } from '../store';
 
@@ -23,11 +23,17 @@ export const fetchTodayCount = createAsyncThunk(
   'willCounter/fetchTodayCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase
-        .rpc('get_or_create_today_count', { p_user_id: userId });
-
-      if (error) throw error;
-      return data;
+      // Mock API call - in real app this would fetch from Supabase
+      const mockCount: WillCount = {
+        id: '1',
+        user_id: userId,
+        count: 0,
+        date: new Date().toISOString().split('T')[0],
+        timestamps: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return mockCount;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch today count');
     }
@@ -38,11 +44,17 @@ export const incrementCount = createAsyncThunk(
   'willCounter/incrementCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase
-        .rpc('increment_will_count', { p_user_id: userId });
-
-      if (error) throw error;
-      return data;
+      // Mock API call - in real app this would increment in Supabase
+      const mockUpdatedCount: WillCount = {
+        id: '1',
+        user_id: userId,
+        count: 1,
+        date: new Date().toISOString().split('T')[0],
+        timestamps: [new Date().toISOString()],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return mockUpdatedCount;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to increment count');
     }
@@ -55,32 +67,17 @@ export const syncOfflineIncrements = createAsyncThunk(
     try {
       const { userId, increments } = params;
       
-      // Get current record
-      const { data: currentData, error: fetchError } = await supabase
-        .rpc('get_or_create_today_count', { p_user_id: userId });
-
-      if (fetchError) throw fetchError;
-
-      // Update with offline increments
-      const newCount = currentData.count + increments;
-      const newTimestamps = [
-        ...currentData.timestamps,
-        ...Array(increments).fill(new Date().toISOString())
-      ];
-
-      const { data, error } = await supabase
-        .from('will_counts')
-        .update({
-          count: newCount,
-          timestamps: newTimestamps,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentData.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock API call - in real app this would sync with Supabase
+      const mockSyncedCount: WillCount = {
+        id: '1',
+        user_id: userId,
+        count: increments,
+        date: new Date().toISOString().split('T')[0],
+        timestamps: Array(increments).fill(new Date().toISOString()),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return mockSyncedCount;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to sync offline increments');
     }

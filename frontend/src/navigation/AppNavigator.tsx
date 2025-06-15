@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
@@ -7,21 +6,17 @@ import { checkAuthState } from '../store/slices/authSlice';
 import { createUserProfile, fetchUserPreferences } from '../store/slices/userSlice';
 
 import LoginScreen from '../components/auth/LoginScreen';
-import WillCounterScreen from '../components/counter/WillCounterScreen';
-import StatisticsScreen from '../components/statistics/StatisticsScreen';
-import SettingsScreen from '../components/settings/SettingsScreen';
+import TabNavigator from './TabNavigator';
 import LoadingScreen from '../components/shared/LoadingScreen';
 
 export type RootStackParamList = {
   Login: undefined;
-  WillCounter: undefined;
-  Statistics: undefined;
-  Settings: undefined;
+  Main: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const AppNavigator: React.FC = () => {
+const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, user, loading } = useSelector((state: RootState) => state.auth);
 
@@ -47,19 +42,13 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen name="WillCounter" component={WillCounterScreen} />
-            <Stack.Screen name="Statistics" component={StatisticsScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-          </>
-        ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {isAuthenticated ? (
+        <Stack.Screen name="Main" component={TabNavigator} />
+      ) : (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      )}
+    </Stack.Navigator>
   );
 };
 

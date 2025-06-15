@@ -1,200 +1,349 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
-  Animated,
+  ScrollView,
+  Dimensions,
+  Platform,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import HapticFeedback from 'react-native-haptic-feedback';
-import { AppDispatch, RootState } from '../../store/store';
-import {
-  fetchTodayCount,
-  incrementCount,
-  incrementOfflineCount,
-  selectTodayCount,
-  selectIsLoading,
-  selectError,
-  clearError,
-} from '../../store/slices/willCounterSlice';
-import { logout } from '../../store/slices/authSlice';
-import SoundPlayer from '../shared/SoundPlayer';
-import { useOfflineSync } from '../../hooks/useOfflineSync';
-import { OfflineService } from '../../services/OfflineService';
-import { NetworkService } from '../../services/NetworkService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+// import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  runOnJS,
+} from 'react-native-reanimated';
+
+// Type definitions
+interface CounterHistoryItem {
+  id: string;
+  count: number;
+  timestamp: Date;
+  action: 'increment' | 'decrement' | 'reset';
+}
+
+interface WillCounterState {
+  count: number;
+  history: CounterHistoryItem[];
+  dailyGoal: number;
+  streak: number;
+}
+
+// Constants
+const STORAGE_KEY = '@will_counter_data';
+const { width: screenWidth } = Dimensions.get('window');
 
 const WillCounterScreen: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { preferences } = useSelector((state: RootState) => state.user);
-  const todayCount = useSelector(selectTodayCount);
-  const loading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
+  // State management
+  const [count, setCount] = useState<number>(0);
+  const [history, setHistory] = useState<CounterHistoryItem[]>([]);
+  const [dailyGoal] = useState<number>(10);
+  const [streak, setStreak] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const { isOffline, offlineIncrementCount } = useOfflineSync();
-  const scaleValue = React.useRef(new Animated.Value(1)).current;
-  const pulseValue = React.useRef(new Animated.Value(1)).current;
+  // Animation values
+  const countScale = useSharedValue(1);
+  const buttonScale = useSharedValue(1);
+  const progressWidth = useSharedValue(0);
 
+  // Load persisted data on component mount
   useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchTodayCount(user.id));
-    }
-  }, [dispatch, user?.id]);
+    loadPersistedData();
+  }, []);
 
+  // Persist data whenever state changes
   useEffect(() => {
-    if (error) {
-      Alert.alert('Error', error);
-      dispatch(clearError());
+    if (!isLoading) {
+      persistData();
     }
-  }, [error, dispatch]);
+  }, [count, history, streak, isLoading]);
 
-  const handleCountPress = useCallback(async () => {
-    if (!user?.id) return;
+  // Update progress animation when count changes
+  useEffect(() => {
+    const progress = Math.min(count / dailyGoal, 1);
+    progressWidth.value = withSpring(progress * 100);
+  }, [count, dailyGoal]);
 
-    // Haptic feedback
-    if (preferences.notificationEnabled) {
-      HapticFeedback.trigger('impactMedium');
-    }
-
-    // Sound feedback
-    if (preferences.soundEnabled) {
-      SoundPlayer.playCountSound();
-    }
-
-    // Button animation
-    Animated.sequence([
-      Animated.timing(scaleValue, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleValue, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Pulse animation for count display
-    Animated.sequence([
-      Animated.timing(pulseValue, {
-        toValue: 1.1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(pulseValue, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
+  // Load data from AsyncStorage
+  const loadPersistedData = async (): Promise<void> => {
     try {
-      if (NetworkService.getIsConnected()) {
-        // Try online increment first
-        await dispatch(incrementCount(user.id)).unwrap();
-      } else {
-        // Store offline increment
-        await OfflineService.storeOfflineIncrement({
-          timestamp: new Date().toISOString(),
-          count: 1,
-        });
-        dispatch(incrementOfflineCount());
+      const savedData = await AsyncStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        const parsedData: WillCounterState = JSON.parse(savedData);
+        setCount(parsedData.count || 0);
+        setHistory(parsedData.history || []);
+        setStreak(parsedData.streak || 0);
       }
     } catch (error) {
-      // Fallback to offline increment on any error
-      await OfflineService.storeOfflineIncrement({
-        timestamp: new Date().toISOString(),
-        count: 1,
-      });
-      dispatch(incrementOfflineCount());
+      console.error('Failed to load persisted data:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [
-    user?.id,
-    preferences.notificationEnabled,
-    preferences.soundEnabled,
-    dispatch,
-    scaleValue,
-    pulseValue,
-  ]);
+  };
 
-  const handleLogout = useCallback(async () => {
+  // Persist data to AsyncStorage
+  const persistData = async (): Promise<void> => {
+    try {
+      const dataToSave: WillCounterState = {
+        count,
+        history,
+        dailyGoal,
+        streak,
+      };
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Failed to persist data:', error);
+    }
+  };
+
+  // Add item to history
+  const addHistoryItem = useCallback((action: CounterHistoryItem['action']): void => {
+    const newHistoryItem: CounterHistoryItem = {
+      id: Date.now().toString(),
+      count: action === 'reset' ? 0 : count + (action === 'increment' ? 1 : -1),
+      timestamp: new Date(),
+      action,
+    };
+
+    setHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]); // Keep only last 10 items
+  }, [count]);
+
+  // Trigger haptic feedback
+  const triggerHaptic = useCallback(async (type: 'light' | 'medium' | 'heavy' = 'light'): Promise<void> => {
+    if (Platform.OS === 'ios') {
+      switch (type) {
+        case 'light':
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          break;
+        case 'medium':
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          break;
+        case 'heavy':
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          break;
+      }
+    }
+  }, []);
+
+  // Counter animation
+  const animateCount = useCallback((): void => {
+    countScale.value = withSequence(
+      withSpring(1.2, { duration: 150 }),
+      withSpring(1, { duration: 150 })
+    );
+  }, []);
+
+  // Button animation
+  const animateButton = useCallback((callback: () => void): void => {
+    buttonScale.value = withSequence(
+      withSpring(0.95, { duration: 100 }),
+      withSpring(1, { duration: 100 }, () => {
+        runOnJS(callback)();
+      })
+    );
+  }, []);
+
+  // Increment counter
+  const handleIncrement = useCallback((): void => {
+    animateButton(() => {
+      setCount(prev => prev + 1);
+      addHistoryItem('increment');
+      animateCount();
+      triggerHaptic('light');
+      
+      // Check if daily goal is reached
+      if (count + 1 === dailyGoal) {
+        triggerHaptic('heavy');
+        setStreak(prev => prev + 1);
+        Alert.alert('🎉 Goal Reached!', `Congratulations! You've reached your daily goal of ${dailyGoal}!`);
+      }
+    });
+  }, [count, dailyGoal, addHistoryItem, animateCount, triggerHaptic, animateButton]);
+
+  // Decrement counter
+  const handleDecrement = useCallback((): void => {
+    if (count > 0) {
+      animateButton(() => {
+        setCount(prev => prev - 1);
+        addHistoryItem('decrement');
+        animateCount();
+        triggerHaptic('light');
+      });
+    }
+  }, [count, addHistoryItem, animateCount, triggerHaptic, animateButton]);
+
+  // Reset counter
+  const handleReset = useCallback((): void => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      'Reset Counter',
+      'Are you sure you want to reset your counter to zero?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Logout',
+          text: 'Reset',
           style: 'destructive',
-          onPress: () => dispatch(logout()),
+          onPress: () => {
+            setCount(0);
+            addHistoryItem('reset');
+            animateCount();
+            triggerHaptic('medium');
+          },
         },
       ]
     );
-  }, [dispatch]);
+  }, [addHistoryItem, animateCount, triggerHaptic]);
 
-  const formatCount = (count: number) => {
-    return count.toString().padStart(3, '0');
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: Date): string => {
+    const now = new Date();
+    const diff = now.getTime() - new Date(timestamp).getTime();
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   };
+
+  // Animated styles
+  const countAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: countScale.value }],
+  }));
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const progressAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {user?.name || 'User'}</Text>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Will Counter</Text>
+          <Text style={styles.subtitle}>Building willpower, one choice at a time</Text>
+        </View>
 
-      <View style={styles.content}>
-        {isOffline && (
-          <View style={styles.offlineIndicator}>
-            <Text style={styles.offlineText}>
-              📡 Offline mode - {offlineIncrementCount} pending sync
-            </Text>
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
           </View>
-        )}
+          <Text style={styles.progressText}>
+            {count} / {dailyGoal} daily goal
+          </Text>
+        </View>
 
-        <View style={styles.countSection}>
-          <Text style={styles.label}>Today's Will Power</Text>
-          <Animated.View style={[styles.countContainer, { transform: [{ scale: pulseValue }] }]}>
-            <Text style={styles.count}>{formatCount(todayCount + offlineIncrementCount)}</Text>
+        {/* Main Counter */}
+        <View style={styles.counterContainer}>
+          <Animated.View style={[styles.countDisplay, countAnimatedStyle]}>
+            <View style={styles.countGradient}>
+              <Text style={styles.countText}>{count.toString().padStart(3, '0')}</Text>
+            </View>
           </Animated.View>
         </View>
 
-        <View style={styles.buttonSection}>
-          <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <Animated.View style={buttonAnimatedStyle}>
             <TouchableOpacity
-              style={[styles.counterButton, loading && styles.counterButtonDisabled]}
-              onPress={handleCountPress}
-              disabled={loading}
-              activeOpacity={0.8}
+              style={[styles.actionButton, styles.decrementButton]}
+              onPress={handleDecrement}
+              disabled={count === 0}
+              accessibilityLabel="Decrease counter"
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonText}>−</Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View style={buttonAnimatedStyle}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.incrementButton]}
+              onPress={handleIncrement}
+              accessibilityLabel="Increase counter"
+              accessibilityRole="button"
             >
               <Text style={styles.buttonText}>+</Text>
             </TouchableOpacity>
           </Animated.View>
-          
-          <Text style={styles.instruction}>
-            Tap the button each time you resist a temptation
-          </Text>
         </View>
 
-        <View style={styles.motivationSection}>
-          <Text style={styles.motivationText}>
-            {(todayCount + offlineIncrementCount) === 0 
-              ? "Start building your willpower!"
-              : (todayCount + offlineIncrementCount) < 5
-              ? "Great start! Keep going!"
-              : (todayCount + offlineIncrementCount) < 10
-              ? "You're building momentum!"
-              : "Amazing willpower! You're unstoppable!"
-            }
-          </Text>
+        {/* Reset Button */}
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={handleReset}
+          accessibilityLabel="Reset counter to zero"
+          accessibilityRole="button"
+        >
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
+
+        {/* Stats Section */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{streak}</Text>
+            <Text style={styles.statLabel}>Day Streak</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{Math.round((count / dailyGoal) * 100)}%</Text>
+            <Text style={styles.statLabel}>Today's Progress</Text>
+          </View>
         </View>
-      </View>
+
+        {/* History Section */}
+        {history.length > 0 && (
+          <View style={styles.historyContainer}>
+            <Text style={styles.historyTitle}>Recent Activity</Text>
+            {history.slice(0, 5).map((item) => (
+              <View key={item.id} style={styles.historyItem}>
+                <View style={styles.historyIcon}>
+                  <Text style={styles.historyIconText}>
+                    {item.action === 'increment' ? '+' : item.action === 'decrement' ? '−' : '↻'}
+                  </Text>
+                </View>
+                <View style={styles.historyContent}>
+                  <Text style={styles.historyAction}>
+                    {item.action === 'increment' && 'Increased to '}
+                    {item.action === 'decrement' && 'Decreased to '}
+                    {item.action === 'reset' && 'Reset to '}
+                    <Text style={styles.historyCount}>{item.count}</Text>
+                  </Text>
+                  <Text style={styles.historyTime}>{formatTimestamp(item.timestamp)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -202,124 +351,223 @@ const WillCounterScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6c757d',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 32,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 8,
-  },
-  greeting: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2D3436',
-  },
-  logoutButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  logoutText: {
-    fontSize: 16,
-    color: '#6C5CE7',
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
+    paddingBottom: 32,
     paddingHorizontal: 24,
-    justifyContent: 'center',
   },
-  countSection: {
-    alignItems: 'center',
-    marginBottom: 64,
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#2d3436',
+    marginBottom: 8,
   },
-  label: {
-    fontSize: 20,
-    color: '#636E72',
-    marginBottom: 16,
+  subtitle: {
+    fontSize: 16,
+    color: '#636e72',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  progressContainer: {
+    marginHorizontal: 24,
+    marginBottom: 32,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e9ecef',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#667eea',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginTop: 8,
     fontWeight: '500',
   },
-  countContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: 24,
-    paddingHorizontal: 48,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  count: {
-    fontSize: 72,
-    fontWeight: 'bold',
-    color: '#6C5CE7',
-    textAlign: 'center',
-  },
-  buttonSection: {
+  counterContainer: {
     alignItems: 'center',
     marginBottom: 48,
   },
-  counterButton: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#6C5CE7',
+  countDisplay: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+  },
+  countGradient: {
+    paddingVertical: 32,
+    paddingHorizontal: 48,
+    minWidth: 200,
+    alignItems: 'center',
+    backgroundColor: '#667eea',
+  },
+  countText: {
+    fontSize: 72,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#6C5CE7',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
     marginBottom: 24,
+    paddingHorizontal: 24,
   },
-  counterButtonDisabled: {
-    opacity: 0.6,
+  actionButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  incrementButton: {
+    backgroundColor: '#00b894',
+  },
+  decrementButton: {
+    backgroundColor: '#e17055',
   },
   buttonText: {
-    fontSize: 48,
-    color: '#FFFFFF',
+    fontSize: 36,
     fontWeight: 'bold',
+    color: '#ffffff',
   },
-  instruction: {
-    fontSize: 16,
-    color: '#636E72',
-    textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: 280,
-  },
-  motivationSection: {
-    alignItems: 'center',
-  },
-  motivationText: {
-    fontSize: 18,
-    color: '#2D3436',
-    textAlign: 'center',
-    fontWeight: '500',
-    lineHeight: 26,
-  },
-  offlineIndicator: {
-    backgroundColor: '#FFA726',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16,
+  resetButton: {
+    backgroundColor: '#74b9ff',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
     alignSelf: 'center',
+    marginBottom: 32,
+    elevation: 3,
+    shadowColor: '#74b9ff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
-  offlineText: {
-    color: '#FFFFFF',
+  resetButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginHorizontal: 24,
+    marginBottom: 32,
+  },
+  statCard: {
+    backgroundColor: '#ffffff',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#667eea',
+    marginBottom: 4,
+  },
+  statLabel: {
     fontSize: 14,
+    color: '#6c757d',
     fontWeight: '500',
     textAlign: 'center',
+  },
+  historyContainer: {
+    marginHorizontal: 24,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
+  historyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2d3436',
+    marginBottom: 16,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  historyIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  historyIconText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#667eea',
+  },
+  historyContent: {
+    flex: 1,
+  },
+  historyAction: {
+    fontSize: 14,
+    color: '#2d3436',
+    marginBottom: 2,
+  },
+  historyCount: {
+    fontWeight: '600',
+    color: '#667eea',
+  },
+  historyTime: {
+    fontSize: 12,
+    color: '#6c757d',
   },
 });
 

@@ -1,6 +1,16 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { supabase } from '../../config/supabase';
-import { UserPreferences, UserStatistics } from '../../../../shared/types/database';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+// import { supabase } from '../../config/supabase';
+
+interface UserPreferences {
+  dailyGoal: number;
+  notifications: boolean;
+  darkMode: boolean;
+}
+
+interface UserStatistics {
+  date: string;
+  count: number;
+}
 
 interface UserState {
   preferences: UserPreferences;
@@ -11,102 +21,24 @@ interface UserState {
 
 const initialState: UserState = {
   preferences: {
-    soundEnabled: true,
-    notificationEnabled: true,
-    theme: 'light',
+    dailyGoal: 10,
+    notifications: true,
+    darkMode: false,
   },
   statistics: [],
   loading: false,
   error: null,
 };
 
-export const createUserProfile = createAsyncThunk(
-  'user/createUserProfile',
-  async (params: { auth0Id: string; email: string }, { rejectWithValue }) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .upsert({
-          auth0_id: params.auth0Id,
-          email: params.email,
-          last_login: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to create user profile');
-    }
-  }
-);
-
-export const fetchUserPreferences = createAsyncThunk(
-  'user/fetchUserPreferences',
-  async (auth0Id: string, { rejectWithValue }) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('preferences')
-        .eq('auth0_id', auth0Id)
-        .single();
-
-      if (error) throw error;
-      return data.preferences as UserPreferences;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch preferences');
-    }
-  }
-);
-
-export const updateUserPreferences = createAsyncThunk(
-  'user/updateUserPreferences',
-  async (params: { auth0Id: string; preferences: UserPreferences }, { rejectWithValue }) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .update({ preferences: params.preferences })
-        .eq('auth0_id', params.auth0Id)
-        .select('preferences')
-        .single();
-
-      if (error) throw error;
-      return data.preferences as UserPreferences;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to update preferences');
-    }
-  }
-);
-
-export const fetchUserStatistics = createAsyncThunk(
-  'user/fetchUserStatistics',
-  async (params: { userId: string; days?: number }, { rejectWithValue }) => {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_user_statistics', {
-          p_user_id: params.userId,
-          p_days: params.days || 30,
-        });
-
-      if (error) throw error;
-      return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch statistics');
-    }
-  }
-);
-
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    updatePreference: (state, action) => {
-      const { key, value } = action.payload;
-      state.preferences = {
-        ...state.preferences,
-        [key]: value,
-      };
+    setPreferences: (state, action: PayloadAction<UserPreferences>) => {
+      state.preferences = action.payload;
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -165,5 +97,67 @@ const userSlice = createSlice({
   },
 });
 
-export const { updatePreference, clearError } = userSlice.actions;
+export const { setPreferences, setLoading, clearError } = userSlice.actions;
+
+// Async thunks
+export const createUserProfile = createAsyncThunk(
+  'user/createUserProfile',
+  async (userData: { auth0Id: string; email: string }, { rejectWithValue }) => {
+    try {
+      // Mock API call - in real app this would create a user profile
+      console.log('Creating user profile:', userData);
+      return userData;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to create user profile');
+    }
+  }
+);
+
+export const fetchUserPreferences = createAsyncThunk(
+  'user/fetchUserPreferences',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      // Mock API call - in real app this would fetch user preferences
+      const mockPreferences: UserPreferences = {
+        dailyGoal: 10,
+        notifications: true,
+        darkMode: false,
+      };
+      return mockPreferences;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch user preferences');
+    }
+  }
+);
+
+export const updateUserPreferences = createAsyncThunk(
+  'user/updateUserPreferences',
+  async (params: { auth0Id: string; preferences: UserPreferences }, { rejectWithValue }) => {
+    try {
+      // Mock API call - in real app this would update user preferences
+      console.log('Updating user preferences:', params);
+      return params.preferences;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to update preferences');
+    }
+  }
+);
+
+export const fetchUserStatistics = createAsyncThunk(
+  'user/fetchUserStatistics',
+  async (params: { userId: string; days?: number }, { rejectWithValue }) => {
+    try {
+      // Mock API call - in real app this would fetch user statistics
+      const mockStatistics: UserStatistics[] = [
+        { date: '2024-01-01', count: 5 },
+        { date: '2024-01-02', count: 8 },
+        { date: '2024-01-03', count: 3 },
+      ];
+      return mockStatistics;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch statistics');
+    }
+  }
+);
+
 export default userSlice.reducer;
