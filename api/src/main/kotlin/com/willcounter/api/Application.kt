@@ -1,5 +1,11 @@
 package com.willcounter.api
 
+import com.willcounter.api.config.DatabaseConfig
+import com.willcounter.api.services.DatabaseService
+import com.willcounter.api.routes.userRoutes
+import com.willcounter.api.routes.willCountRoutes
+import com.willcounter.api.dto.HealthResponse
+import com.willcounter.api.dto.ApiResponse
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -10,8 +16,19 @@ import io.ktor.server.routing.*
 import io.ktor.server.response.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
 
 fun main() {
+    // Initialize database
+    println("Initializing database...")
+    try {
+        DatabaseConfig.init()
+        println("Database initialized successfully")
+    } catch (e: Exception) {
+        println("Failed to initialize database: ${e.message}")
+        return
+    }
+    
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
@@ -21,6 +38,7 @@ fun Application.module() {
         json(Json {
             prettyPrint = true
             isLenient = true
+            ignoreUnknownKeys = true
         })
     }
     
@@ -29,18 +47,32 @@ fun Application.module() {
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Get)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         anyHost()
     }
     
+    val databaseService = DatabaseService()
+    
     routing {
         get("/") {
-            call.respond(mapOf("message" to "Will Counter API"))
+            call.respond(ApiResponse(
+                success = true,
+                data = mapOf("message" to "Will Counter API", "version" to "1.0.0"),
+                message = "Welcome to Will Counter API"
+            ))
         }
         
         get("/health") {
-            call.respond(mapOf("status" to "healthy"))
+            call.respondText("API is running and healthy", ContentType.Text.Plain)
         }
+        
+        // Add user routes
+        userRoutes(databaseService)
+        
+        // Add will count routes
+        willCountRoutes(databaseService)
     }
 }

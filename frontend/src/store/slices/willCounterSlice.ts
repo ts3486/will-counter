@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-// import { supabase } from '../../config/supabase';
+import { apiService } from '../../services/api';
 import { WillCount } from '../../../../shared/types/database';
 import { RootState } from '../store';
 
@@ -23,19 +23,9 @@ export const fetchTodayCount = createAsyncThunk(
   'willCounter/fetchTodayCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      // Mock API call - in real app this would fetch from Supabase
-      const mockCount: WillCount = {
-        id: '1',
-        user_id: userId,
-        count: 0,
-        date: new Date().toISOString().split('T')[0],
-        timestamps: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      return mockCount;
+      return await apiService.getTodayCount(userId);
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch today count');
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -44,19 +34,9 @@ export const incrementCount = createAsyncThunk(
   'willCounter/incrementCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      // Mock API call - in real app this would increment in Supabase
-      const mockUpdatedCount: WillCount = {
-        id: '1',
-        user_id: userId,
-        count: 1,
-        date: new Date().toISOString().split('T')[0],
-        timestamps: [new Date().toISOString()],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      return mockUpdatedCount;
+      return await apiService.incrementCount(userId);
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to increment count');
+      return rejectWithValue(error.message);
     }
   }
 );

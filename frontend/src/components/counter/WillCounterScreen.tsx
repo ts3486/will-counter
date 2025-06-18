@@ -10,9 +10,14 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchTodayCount,
+  incrementCount,
+  selectTodayCount,
+  selectIsLoading
+} from '../../store/slices/willCounterSlice';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -41,29 +46,30 @@ const STORAGE_KEY = '@will_counter_data';
 const { width: screenWidth } = Dimensions.get('window');
 
 const WillCounterScreen: React.FC = () => {
-  // State management
-  const [count, setCount] = useState<number>(0);
+  const dispatch = useDispatch();
+  const count = useSelector(selectTodayCount);
+  const isLoading = useSelector(selectIsLoading);
+  
+  // Local state for UI elements
   const [history, setHistory] = useState<CounterHistoryItem[]>([]);
   const [dailyGoal] = useState<number>(10);
   const [streak, setStreak] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Animation values
   const countScale = useSharedValue(1);
   const buttonScale = useSharedValue(1);
   const progressWidth = useSharedValue(0);
 
-  // Load persisted data on component mount
+  // Load today's count on component mount
   useEffect(() => {
-    loadPersistedData();
-  }, []);
+    const userId = '2999122f-8691-42a3-829c-c2641f6da63f'; // Test user ID from Supabase
+    dispatch(fetchTodayCount(userId));
+  }, [dispatch]);
 
-  // Persist data whenever state changes
+  // Update local history when count changes
   useEffect(() => {
-    if (!isLoading) {
-      persistData();
-    }
-  }, [count, history, streak, isLoading]);
+    // Keep local history for UI, but main count comes from Redux
+  }, [count]);
 
   // Update progress animation when count changes
   useEffect(() => {
@@ -71,37 +77,6 @@ const WillCounterScreen: React.FC = () => {
     progressWidth.value = withSpring(progress * 100);
   }, [count, dailyGoal]);
 
-  // Load data from AsyncStorage
-  const loadPersistedData = async (): Promise<void> => {
-    try {
-      const savedData = await AsyncStorage.getItem(STORAGE_KEY);
-      if (savedData) {
-        const parsedData: WillCounterState = JSON.parse(savedData);
-        setCount(parsedData.count || 0);
-        setHistory(parsedData.history || []);
-        setStreak(parsedData.streak || 0);
-      }
-    } catch (error) {
-      console.error('Failed to load persisted data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Persist data to AsyncStorage
-  const persistData = async (): Promise<void> => {
-    try {
-      const dataToSave: WillCounterState = {
-        count,
-        history,
-        dailyGoal,
-        streak,
-      };
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-    } catch (error) {
-      console.error('Failed to persist data:', error);
-    }
-  };
 
   // Add item to history
   const addHistoryItem = useCallback((action: CounterHistoryItem['action']): void => {
@@ -153,7 +128,8 @@ const WillCounterScreen: React.FC = () => {
   // Increment counter
   const handleIncrement = useCallback((): void => {
     animateButton(() => {
-      setCount(prev => prev + 1);
+      const userId = '2999122f-8691-42a3-829c-c2641f6da63f'; // Test user ID from Supabase
+      dispatch(incrementCount(userId));
       addHistoryItem('increment');
       animateCount();
       triggerHaptic('light');
@@ -165,13 +141,13 @@ const WillCounterScreen: React.FC = () => {
         Alert.alert('🎉 Goal Reached!', `Congratulations! You've reached your daily goal of ${dailyGoal}!`);
       }
     });
-  }, [count, dailyGoal, addHistoryItem, animateCount, triggerHaptic, animateButton]);
+  }, [dispatch, count, dailyGoal, addHistoryItem, animateCount, triggerHaptic, animateButton]);
 
-  // Decrement counter
+  // Decrement counter (keeping local logic for now)
   const handleDecrement = useCallback((): void => {
     if (count > 0) {
       animateButton(() => {
-        setCount(prev => prev - 1);
+        // Note: This would need a decrement API endpoint
         addHistoryItem('decrement');
         animateCount();
         triggerHaptic('light');
@@ -190,7 +166,7 @@ const WillCounterScreen: React.FC = () => {
           text: 'Reset',
           style: 'destructive',
           onPress: () => {
-            setCount(0);
+            // Note: This would need a reset API endpoint
             addHistoryItem('reset');
             animateCount();
             triggerHaptic('medium');

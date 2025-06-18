@@ -30,7 +30,8 @@ config.resolver = {
   ],
   alias: {
     'redux': path.resolve(__dirname, '../node_modules/redux/dist/redux.legacy-esm.js'),
-    '@react-native/js-polyfills': path.resolve(__dirname, '../node_modules/@react-native/js-polyfills')
+    '@react-native/js-polyfills': path.resolve(__dirname, '../node_modules/@react-native/js-polyfills'),
+    'react-native-gesture-handler': path.resolve(__dirname, 'node_modules/react-native-gesture-handler')
   }
 };
 
