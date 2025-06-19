@@ -148,7 +148,7 @@ const StatisticsScreen: React.FC = () => {
                   styles.bar,
                   {
                     height: Math.max((day.count / maxCount) * 120, 4),
-                    backgroundColor: day.count > 0 ? '#667eea' : '#e9ecef',
+                    backgroundColor: day.count > 0 ? '#3B82F6' : '#E2E8F0',
                   },
                 ]}
               />
@@ -188,12 +188,12 @@ const StatisticsScreen: React.FC = () => {
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
-            {renderStatCard('Total Count', stats.totalCount.toString(), `Last ${selectedPeriod} days`, '📈', '#667eea')}
-            {renderStatCard('Daily Average', stats.averageDaily.toString(), 'Per day', '📊', '#00b894')}
+            {renderStatCard('Total Count', stats.totalCount.toString(), `Last ${selectedPeriod} days`, '📈', '#3B82F6')}
+            {renderStatCard('Daily Average', stats.averageDaily.toString(), 'Per day', '📊', '#10B981')}
           </View>
           <View style={styles.statsRow}>
-            {renderStatCard('Best Day', stats.bestDay.toString(), 'Highest count', '⭐', '#fdcb6e')}
-            {renderStatCard('Current Streak', stats.streak.toString(), 'Days in a row', '🔥', '#e17055')}
+            {renderStatCard('Best Day', stats.bestDay.toString(), 'Highest count', '⭐', '#F59E0B')}
+            {renderStatCard('Current Streak', stats.streak.toString(), 'Days in a row', '🔥', '#FF6B35')}
           </View>
         </View>
 
@@ -206,7 +206,7 @@ const StatisticsScreen: React.FC = () => {
           <View style={styles.insightsList}>
             {stats.totalCount === 0 ? (
               <View style={styles.insightItem}>
-                <Text style={{ fontSize: 20, color: "#667eea" }}>💡</Text>
+                <Text style={{ fontSize: 20, color: "#3B82F6" }}>💡</Text>
                 <Text style={styles.insightText}>
                   Start tracking your willpower to see personalized insights here!
                 </Text>
@@ -214,20 +214,20 @@ const StatisticsScreen: React.FC = () => {
             ) : (
               <>
                 <View style={styles.insightItem}>
-                  <Text style={{ fontSize: 20, color: "#00b894" }}>✅</Text>
+                  <Text style={{ fontSize: 20, color: "#10B981" }}>✅</Text>
                   <Text style={styles.insightText}>
                     You've successfully resisted temptation {stats.totalCount} times
                   </Text>
                 </View>
                 <View style={styles.insightItem}>
-                  <Text style={{ fontSize: 20, color: "#667eea" }}>📈</Text>
+                  <Text style={{ fontSize: 20, color: "#3B82F6" }}>📈</Text>
                   <Text style={styles.insightText}>
                     Your willpower is getting stronger each day
                   </Text>
                 </View>
                 {stats.streak > 0 && (
                   <View style={styles.insightItem}>
-                    <Text style={{ fontSize: 20, color: "#e17055" }}>🔥</Text>
+                    <Text style={{ fontSize: 20, color: "#FF6B35" }}>🔥</Text>
                     <Text style={styles.insightText}>
                       You're on a {stats.streak}-day streak! Keep it up!
                     </Text>
@@ -235,7 +235,7 @@ const StatisticsScreen: React.FC = () => {
                 )}
                 {stats.averageDaily > 5 && (
                   <View style={styles.insightItem}>
-                    <Text style={{ fontSize: 20, color: "#fdcb6e" }}>🏆</Text>
+                    <Text style={{ fontSize: 20, color: "#F59E0B" }}>🏆</Text>
                     <Text style={styles.insightText}>
                       Excellent consistency! You're building strong habits
                     </Text>
@@ -253,7 +253,7 @@ const StatisticsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,
@@ -262,7 +262,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#64748B',
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
@@ -273,15 +274,18 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2d3436',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#0F172A',
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: '#636e72',
+    color: '#64748B',
     marginBottom: 16,
+    fontWeight: '400',
+    lineHeight: 24,
   },
   selectorContainer: {
     paddingHorizontal: 24,
@@ -289,7 +293,7 @@ const styles = StyleSheet.create({
   },
   periodSelector: {
     flexDirection: 'row',
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#E2E8F0',
     borderRadius: 12,
     padding: 4,
   },
@@ -300,15 +304,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   periodButtonActive: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#3B82F6',
   },
   periodButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6c757d',
+    color: '#64748B',
+    letterSpacing: 0.25,
   },
   periodButtonTextActive: {
-    color: '#ffffff',
+    color: '#FFFFFF',
   },
   statsContainer: {
     paddingHorizontal: 24,
@@ -321,16 +326,18 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     marginHorizontal: 4,
     borderLeftWidth: 4,
-    elevation: 3,
-    shadowColor: '#000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   statHeader: {
     flexDirection: 'row',
@@ -340,8 +347,9 @@ const styles = StyleSheet.create({
   statTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2d3436',
+    color: '#0F172A',
     marginLeft: 8,
+    letterSpacing: -0.1,
   },
   statValue: {
     fontSize: 24,
@@ -350,25 +358,29 @@ const styles = StyleSheet.create({
   },
   statSubtitle: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#64748B',
+    lineHeight: 16,
   },
   chartContainer: {
     marginHorizontal: 24,
     marginBottom: 24,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC',
     borderRadius: 16,
-    padding: 20,
-    elevation: 3,
-    shadowColor: '#000',
+    padding: 24,
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   chartTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#2d3436',
+    color: '#0F172A',
     marginBottom: 16,
+    letterSpacing: -0.25,
   },
   chart: {
     flexDirection: 'row',
@@ -383,38 +395,42 @@ const styles = StyleSheet.create({
   },
   bar: {
     width: 20,
-    backgroundColor: '#667eea',
+    backgroundColor: '#3B82F6',
     borderRadius: 10,
     marginBottom: 8,
   },
   chartLabel: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#64748B',
     fontWeight: '500',
     marginBottom: 2,
+    letterSpacing: 0.25,
   },
   chartValue: {
     fontSize: 10,
-    color: '#667eea',
+    color: '#3B82F6',
     fontWeight: '600',
   },
   insightsContainer: {
     marginHorizontal: 24,
     marginBottom: 32,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC',
     borderRadius: 16,
-    padding: 20,
-    elevation: 3,
-    shadowColor: '#000',
+    padding: 24,
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   insightsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#2d3436',
+    color: '#0F172A',
     marginBottom: 16,
+    letterSpacing: -0.25,
   },
   insightsList: {
     gap: 12,
@@ -426,10 +442,11 @@ const styles = StyleSheet.create({
   },
   insightText: {
     fontSize: 14,
-    color: '#2d3436',
+    color: '#0F172A',
     lineHeight: 20,
     marginLeft: 12,
     flex: 1,
+    fontWeight: '400',
   },
 });
 

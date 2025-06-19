@@ -8,5 +8,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "expo-auth-session": "^6.2.0",
+    "expo-crypto": "^14.1.5",
+    "expo-web-browser": "^14.1.6"
+  }
 }

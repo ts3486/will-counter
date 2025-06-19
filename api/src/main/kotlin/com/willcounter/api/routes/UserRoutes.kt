@@ -2,7 +2,9 @@ package com.willcounter.api.routes
 
 import com.willcounter.api.dto.*
 import com.willcounter.api.services.DatabaseService
+import com.willcounter.api.config.Auth0Principal
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -11,31 +13,84 @@ import io.ktor.http.*
 fun Route.userRoutes(databaseService: DatabaseService) {
     route("/api/users") {
         
-        post {
-            try {
-                val request = call.receive<CreateUserRequest>()
-                
-                // Check if user already exists
-                val existingUser = databaseService.getUserByAuth0Id(request.auth0Id)
-                if (existingUser != null) {
-                    call.respond(HttpStatusCode.Conflict, ApiResponse<UserResponse>(
-                        success = false,
-                        error = "User already exists"
+        authenticate("auth0") {
+            post {
+                try {
+                    // Get authenticated user info
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
+                            success = false,
+                            error = "Authentication required"
+                        ))
+                        return@post
+                    }
+
+                    val request = call.receive<CreateUserRequest>()
+                    
+                    // Verify the auth0_id matches the authenticated user
+                    if (request.auth0Id != auth0Id) {
+                        call.respond(HttpStatusCode.Forbidden, ApiResponse<Any>(
+                            success = false,
+                            error = "Cannot create user for different auth0_id"
+                        ))
+                        return@post
+                    }
+                    
+                    // Check if user already exists
+                    val existingUser = databaseService.getUserByAuth0Id(request.auth0Id)
+                    if (existingUser != null) {
+                        call.respond(HttpStatusCode.OK, ApiResponse(
+                            success = true,
+                            data = existingUser,
+                            message = "User already exists"
+                        ))
+                        return@post
+                    }
+                    
+                    val user = databaseService.createUser(request)
+                    call.respond(HttpStatusCode.Created, ApiResponse(
+                        success = true,
+                        data = user,
+                        message = "User created successfully"
                     ))
-                    return@post
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                        success = false,
+                        error = "Failed to create user: ${e.message}"
+                    ))
                 }
-                
-                val user = databaseService.createUser(request)
-                call.respond(HttpStatusCode.Created, ApiResponse(
-                    success = true,
-                    data = user,
-                    message = "User created successfully"
-                ))
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                    success = false,
-                    error = "Failed to create user: ${e.message}"
-                ))
+            }
+            
+            get("/me") {
+                try {
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
+                            success = false,
+                            error = "Authentication required"
+                        ))
+                        return@get
+                    }
+                    
+                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    if (user != null) {
+                        call.respond(HttpStatusCode.OK, ApiResponse(
+                            success = true,
+                            data = user
+                        ))
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
+                            success = false,
+                            error = "User not found"
+                        ))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                        success = false,
+                        error = "Failed to get user: ${e.message}"
+                    ))
+                }
             }
         }
         

@@ -12,7 +12,15 @@ interface UserStatistics {
   count: number;
 }
 
+interface User {
+  sub: string;
+  email: string;
+  name?: string;
+  picture?: string;
+}
+
 interface UserState {
+  user: User | null;
   preferences: UserPreferences;
   statistics: UserStatistics[];
   loading: boolean;
@@ -20,6 +28,7 @@ interface UserState {
 }
 
 const initialState: UserState = {
+  user: null,
   preferences: {
     dailyGoal: 10,
     notifications: true,
@@ -34,6 +43,12 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+    },
+    clearUser: (state) => {
+      state.user = null;
+    },
     setPreferences: (state, action: PayloadAction<UserPreferences>) => {
       state.preferences = action.payload;
     },
@@ -97,7 +112,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { setPreferences, setLoading, clearError } = userSlice.actions;
+export const { setUser, clearUser, setPreferences, setLoading, clearError } = userSlice.actions;
 
 // Async thunks
 export const createUserProfile = createAsyncThunk(

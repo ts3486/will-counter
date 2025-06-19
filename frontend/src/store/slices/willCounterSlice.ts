@@ -101,11 +101,13 @@ const willCounterSlice = createSlice({
         state.error = null;
       })
       .addCase(incrementCount.fulfilled, (state, action) => {
+        console.log('Increment fulfilled, payload:', action.payload);
         state.currentRecord = action.payload;
-        state.todayCount = action.payload.count;
+        state.todayCount = action.payload?.count || state.todayCount + 1;
         state.lastIncrementTime = new Date().toISOString();
       })
       .addCase(incrementCount.rejected, (state, action) => {
+        console.log('Increment rejected, error:', action.payload);
         state.error = action.payload as string;
         // On network error, increment offline
         state.todayCount += 1;

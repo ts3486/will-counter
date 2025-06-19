@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,28 +8,22 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../store/store';
-import { login, clearError } from '../../store/slices/authSlice';
+import { useAuth } from '../../contexts/AuthContext';
 
 const LoginScreen: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
-      await dispatch(login());
-    } catch (err) {
-      Alert.alert('Login Error', 'Failed to login. Please try again.');
+      setLoading(true);
+      await login();
+    } catch (err: any) {
+      Alert.alert('Login Error', err.message || 'Failed to login. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
-
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Authentication Error', error);
-      dispatch(clearError());
-    }
-  }, [error, dispatch]);
 
   return (
     <SafeAreaView style={styles.container}>

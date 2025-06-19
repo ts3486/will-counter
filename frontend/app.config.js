@@ -33,6 +33,7 @@ module.exports = {
         projectId: "your-project-id"
       }
     },
+    scheme: "willcounter",
     experiments: {
       tsconfigPaths: true
     },

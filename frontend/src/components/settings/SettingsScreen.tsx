@@ -89,7 +89,7 @@ const SettingsScreen: React.FC = () => {
   ) => (
     <View style={styles.settingItem}>
       <View style={styles.settingLeft}>
-        <Text style={{ fontSize: 24, color: "#667eea" }}>{icon}</Text>
+        <Text style={{ fontSize: 24, color: "#3B82F6" }}>{icon}</Text>
         <View style={styles.settingContent}>
           <Text style={styles.settingTitle}>{title}</Text>
           <Text style={styles.settingSubtitle}>{subtitle}</Text>
@@ -98,9 +98,9 @@ const SettingsScreen: React.FC = () => {
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: '#e9ecef', true: '#667eea' }}
+        trackColor={{ false: '#E2E8F0', true: '#3B82F6' }}
         thumbColor={value ? '#ffffff' : '#ffffff'}
-        ios_backgroundColor="#e9ecef"
+        ios_backgroundColor="#E2E8F0"
       />
     </View>
   );
@@ -117,7 +117,7 @@ const SettingsScreen: React.FC = () => {
         <Text 
           style={{ 
             fontSize: 24, 
-            color: destructive ? '#e17055' : '#667eea' 
+            color: destructive ? '#EF4444' : '#3B82F6' 
           }}
         >
           {icon}
@@ -129,7 +129,7 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingSubtitle}>{subtitle}</Text>
         </View>
       </View>
-      <Text style={{ fontSize: 16, color: "#6c757d" }}>›</Text>
+      <Text style={{ fontSize: 16, color: "#64748B" }}>›</Text>
     </TouchableOpacity>
   );
 
@@ -196,14 +196,14 @@ const SettingsScreen: React.FC = () => {
                 style={styles.goalButton}
                 onPress={() => updatePreference('dailyGoal', Math.max(1, preferences.dailyGoal - 1))}
               >
-                <Text style={{ fontSize: 16, color: "#667eea", fontWeight: 'bold' }}>−</Text>
+                <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>−</Text>
               </TouchableOpacity>
               <Text style={styles.goalValue}>{preferences.dailyGoal}</Text>
               <TouchableOpacity
                 style={styles.goalButton}
                 onPress={() => updatePreference('dailyGoal', Math.min(50, preferences.dailyGoal + 1))}
               >
-                <Text style={{ fontSize: 16, color: "#667eea", fontWeight: 'bold' }}>+</Text>
+                <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>+</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -280,7 +280,7 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -291,14 +291,17 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2d3436',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#0F172A',
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: '#636e72',
+    color: '#64748B',
+    fontWeight: '400',
+    lineHeight: 24,
   },
   section: {
     marginBottom: 32,
@@ -307,22 +310,25 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#2d3436',
+    color: '#0F172A',
     marginBottom: 16,
+    letterSpacing: -0.25,
   },
   settingItem: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 3,
-    shadowColor: '#000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   settingLeft: {
     flexDirection: 'row',
@@ -336,33 +342,37 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2d3436',
+    color: '#0F172A',
     marginBottom: 2,
+    letterSpacing: -0.1,
   },
   settingSubtitle: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#64748B',
+    lineHeight: 20,
   },
   destructiveText: {
-    color: '#e17055',
+    color: '#EF4444',
   },
   goalContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 3,
-    shadowColor: '#000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   goalSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#E2E8F0',
     borderRadius: 12,
     padding: 4,
   },
@@ -370,22 +380,23 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 2,
+    elevation: 1,
   },
   goalValue: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#667eea',
+    fontWeight: '700',
+    color: '#3B82F6',
     marginHorizontal: 16,
     minWidth: 24,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   developerSection: {
     alignItems: 'center',
@@ -394,9 +405,10 @@ const styles = StyleSheet.create({
   },
   developerText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#64748B',
     textAlign: 'center',
     fontStyle: 'italic',
+    lineHeight: 20,
   },
 });
 

@@ -9,8 +9,8 @@ import com.zaxxer.hikari.HikariDataSource
 object DatabaseConfig {
     
     fun init() {
-        val supabaseUrl = System.getenv("SUPABASE_URL") ?: "YOUR_SUPABASE_URL"
-        val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: "YOUR_SUPABASE_KEY"
+        val supabaseUrl = System.getenv("SUPABASE_URL") ?: "https://mrbyvoccayqxddwrnsye.supabase.co"
+        val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yYnl2b2NjYXlxeGRkd3Juc3llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjAwNjYzOCwiZXhwIjoyMDYxNTgyNjM4fQ.XcWsv0uJ4UfrL4usgwUmk40Ktq93u-m8lWQ_V3XlgKA"
         
         val projectId = supabaseUrl.replace("https://", "").replace(".supabase.co", "")
         

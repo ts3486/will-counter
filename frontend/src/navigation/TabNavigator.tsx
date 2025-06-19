@@ -19,25 +19,26 @@ const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#667eea',
-        tabBarInactiveTintColor: '#6c757d',
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#e9ecef',
+          borderTopColor: '#E2E8F0',
           paddingBottom: 8,
           paddingTop: 8,
           height: 84,
           elevation: 8,
-          shadowColor: '#000',
+          shadowColor: '#0F172A',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: 0.06,
           shadowRadius: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
           marginTop: 4,
+          letterSpacing: 0.25,
         },
         tabBarIconStyle: {
           marginTop: 4,

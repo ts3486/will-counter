@@ -1,6 +1,7 @@
 package com.willcounter.api
 
 import com.willcounter.api.config.DatabaseConfig
+import com.willcounter.api.config.configureAuthentication
 import com.willcounter.api.services.DatabaseService
 import com.willcounter.api.routes.userRoutes
 import com.willcounter.api.routes.willCountRoutes
@@ -34,6 +35,9 @@ fun main() {
 }
 
 fun Application.module() {
+    // Configure authentication
+    configureAuthentication()
+    
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true
