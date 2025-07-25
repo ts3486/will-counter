@@ -76,7 +76,15 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
   }, [progressPercentage, animatedProgress]);
 
   return (
-    <TouchableOpacity onPress={handleTap} activeOpacity={0.9} disabled={isLoading}>
+    <TouchableOpacity 
+      onPress={handleTap} 
+      activeOpacity={0.9} 
+      disabled={isLoading}
+      testID="circular-counter"
+      accessibilityRole="button"
+      accessibilityLabel={`Counter showing ${count} out of ${dailyGoal}`}
+      accessibilityHint="Tap to increment your willpower count"
+    >
       <Animated.View style={[styles.circleContainer, circleStyle, isLoading && styles.loadingContainer]}>
         <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
           {/* Background circle - calm foundation */}

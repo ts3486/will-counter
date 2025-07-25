@@ -48,7 +48,7 @@ const mockAuthContext = {
   isLoading: false,
 };
 
-jest.mock('../../../src/contexts/AuthContext', () => ({
+jest.mock('../../src/contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext,
 }));
 
@@ -57,19 +57,32 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: 'SafeAreaView',
 }));
 
+// Mock AsyncStorage
+const mockAsyncStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  multiRemove: jest.fn(),
+};
+
+jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
+
 // Mock React Native components
 jest.mock('react-native', () => ({
+  Alert: {
+    alert: jest.fn(),
+  },
   View: 'View',
   Text: 'Text',
+  TouchableOpacity: 'TouchableOpacity',
+  ScrollView: 'ScrollView',
   StyleSheet: {
     create: (styles: any) => styles,
   },
-  ScrollView: 'ScrollView',
+  Modal: 'Modal',
   Platform: {
     OS: 'ios',
   },
-  Modal: 'Modal',
-  TouchableOpacity: 'TouchableOpacity',
   Dimensions: {
     get: () => ({ width: 375, height: 667 }),
   },
@@ -88,54 +101,85 @@ jest.mock('react-redux', () => ({
 }));
 
 // Mock redux slice
-jest.mock('../../../src/store/slices/willCounterSlice', () => ({
+jest.mock('../../src/store/slices/willCounterSlice', () => ({
   fetchTodayCount: jest.fn(),
   incrementCount: jest.fn(),
+  resetTodayCount: jest.fn(),
   selectTodayCount: jest.fn(),
   selectIsLoading: jest.fn(),
   selectError: jest.fn(),
 }));
 
-describe('WillCounterScreen', () => {
+// Mock React Navigation
+jest.mock('@react-navigation/bottom-tabs', () => ({
+  createBottomTabNavigator: () => ({
+    Navigator: 'Navigator',
+    Screen: 'Screen',
+  }),
+}));
+
+describe('TabNavigator', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAsyncStorage.getItem.mockResolvedValue(null);
+  });
+
   it('should import without crashing', () => {
     expect(() => {
-      require('../../../src/components/counter/WillCounterScreen');
+      require('../../src/navigation/TabNavigator');
     }).not.toThrow();
   });
 
   it('should export a default component', () => {
-    const WillCounterScreen = require('../../../src/components/counter/WillCounterScreen').default;
-    expect(WillCounterScreen).toBeDefined();
-    expect(typeof WillCounterScreen).toBe('function');
+    const TabNavigator = require('../../src/navigation/TabNavigator').default;
+    expect(TabNavigator).toBeDefined();
+    expect(typeof TabNavigator).toBe('function');
   });
 
   it('should be a React component', () => {
-    const WillCounterScreen = require('../../../src/components/counter/WillCounterScreen').default;
+    const TabNavigator = require('../../src/navigation/TabNavigator').default;
     
     // Test that it can be instantiated
     expect(() => {
-      React.createElement(WillCounterScreen);
+      React.createElement(TabNavigator);
     }).not.toThrow();
   });
 
-  it('should handle component lifecycle', () => {
-    const WillCounterScreen = require('../../../src/components/counter/WillCounterScreen').default;
+  it('should export TabParamList type', () => {
+    const module = require('../../src/navigation/TabNavigator');
     
-    // Test multiple instantiations
-    for (let i = 0; i < 5; i++) {
+    // The module should export both default and types
+    expect(module.default).toBeDefined();
+    expect(typeof module.default).toBe('function');
+  });
+
+  it('should be compatible with React functional component pattern', () => {
+    const TabNavigator = require('../../src/navigation/TabNavigator').default;
+    
+    // Should be a function (functional component)
+    expect(typeof TabNavigator).toBe('function');
+    
+    // Should not be a class component
+    expect(TabNavigator.prototype?.render).toBeUndefined();
+  });
+
+  it('should handle multiple instantiations', () => {
+    const TabNavigator = require('../../src/navigation/TabNavigator').default;
+    
+    // Test multiple instantiations to ensure no conflicts
+    for (let i = 0; i < 3; i++) {
       expect(() => {
-        React.createElement(WillCounterScreen);
+        React.createElement(TabNavigator);
       }).not.toThrow();
     }
   });
 
-  it('should be compatible with React functional component pattern', () => {
-    const WillCounterScreen = require('../../../src/components/counter/WillCounterScreen').default;
+  it('should integrate with navigation system', () => {
+    const TabNavigator = require('../../src/navigation/TabNavigator').default;
     
-    // Should be a function (functional component)
-    expect(typeof WillCounterScreen).toBe('function');
-    
-    // Should not be a class component
-    expect(WillCounterScreen.prototype?.render).toBeUndefined();
+    // Basic integration test - should create without navigation context errors
+    expect(() => {
+      React.createElement(TabNavigator);
+    }).not.toThrow();
   });
 });

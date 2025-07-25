@@ -1,45 +1,82 @@
+// Jest setup file for React Native with Expo
 import 'react-native-gesture-handler/jestSetup';
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
-  return Reanimated;
+  return {
+    default: {
+      createAnimatedComponent: (component) => component,
+      useSharedValue: (initial) => ({ value: initial }),
+      useAnimatedStyle: (fn) => ({}),
+      useAnimatedProps: (fn) => ({}),
+      withTiming: (value) => value,
+      withSpring: (value) => value,
+      withSequence: (...values) => values[values.length - 1],
+      runOnJS: (fn) => fn,
+    },
+    useSharedValue: (initial) => ({ value: initial }),
+    useAnimatedStyle: (fn) => ({}),
+    useAnimatedProps: (fn) => ({}),
+    withTiming: (value) => value,
+    withSpring: (value) => value,
+    withSequence: (...values) => values[values.length - 1],
+    runOnJS: (fn) => fn,
+    createAnimatedComponent: (component) => component,
+  };
 });
-
-// Mock react-native-mmkv
-jest.mock('react-native-mmkv', () => ({
-  MMKV: jest.fn(() => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getBoolean: jest.fn(),
-    delete: jest.fn(),
-  })),
-}));
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
-// Mock NetInfo
-jest.mock('@react-native-community/netinfo', () => ({
-  addEventListener: jest.fn(),
-  fetch: jest.fn(() => Promise.resolve({ isConnected: true })),
+// Mock expo-haptics
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  ImpactFeedbackStyle: {
+    Light: 'light',
+    Medium: 'medium', 
+    Heavy: 'heavy',
+  },
 }));
 
-// Mock react-native-sound
-jest.mock('react-native-sound', () => ({
-  setCategory: jest.fn(),
+// Mock react-native-safe-area-context
+jest.mock('react-native-safe-area-context', () => ({
+  SafeAreaView: ({ children }: any) => children,
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-// Mock haptic feedback
-jest.mock('react-native-haptic-feedback', () => ({
-  trigger: jest.fn(),
+// Mock react-native-svg
+jest.mock('react-native-svg', () => ({
+  Svg: ({ children }: any) => children,
+  Circle: ({ children, ...props }: any) => ({ ...props, children }),
 }));
 
-// Silence the warning: Animated: `useNativeDriver` is not supported
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+// Mock React Navigation
+jest.mock('@react-navigation/native', () => {
+  const actualNav = jest.requireActual('@react-navigation/native');
+  return {
+    ...actualNav,
+    useNavigation: () => ({
+      navigate: jest.fn(),
+      dispatch: jest.fn(),
+      goBack: jest.fn(),
+    }),
+    useRoute: () => ({
+      params: {},
+    }),
+    useIsFocused: () => true,
+    NavigationContainer: ({ children }: any) => children,
+  };
+});
+
+// Mock React Navigation Bottom Tabs
+jest.mock('@react-navigation/bottom-tabs', () => ({
+  createBottomTabNavigator: () => ({
+    Navigator: ({ children }: any) => children,
+    Screen: ({ children }: any) => children,
+  }),
+}));
 
 // Mock console methods for cleaner test output
 global.console = {
@@ -50,3 +87,6 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
 };
+
+// Global test setup
+global.__DEV__ = true;

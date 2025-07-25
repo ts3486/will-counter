@@ -166,6 +166,7 @@ const WillCounterScreen: React.FC = () => {
         transparent={true}
         animationType="fade"
         onRequestClose={handleModalDismiss}
+        testID="goal-modal"
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

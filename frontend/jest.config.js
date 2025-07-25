@@ -1,5 +1,5 @@
 module.exports = {
-  preset: 'react-native',
+  preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testMatch: [
     '**/__tests__/**/*.(ts|tsx|js)',
@@ -11,8 +11,7 @@ module.exports = {
     '!src/**/*.stories.{ts,tsx}',
   ],
   coverageReporters: ['html', 'text', 'text-summary', 'cobertura'],
-  testEnvironment: 'node',
   transformIgnorePatterns: [
-    'node_modules/(?!(jest-)?react-native|@react-native|@react-navigation)',
+    'node_modules/(?!(jest-)?react-native|@react-native|@react-navigation|expo|@expo|@unimodules)',
   ],
 };
