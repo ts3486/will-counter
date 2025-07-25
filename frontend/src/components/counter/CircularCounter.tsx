@@ -3,12 +3,16 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-nati
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
+  useAnimatedProps,
   withSpring, 
   withSequence,
   withTiming,
   runOnJS 
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
+
+// Create animated Circle component
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const { width: screenWidth } = Dimensions.get('window');
 const CIRCLE_SIZE = Math.min(screenWidth * 0.7, 300);
@@ -32,39 +36,44 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
   isLoading = false
 }) => {
   const scale = useSharedValue(1);
-  const rotation = useSharedValue(0);
+  const animatedProgress = useSharedValue(0);
 
   // Calculate progress percentage
   const progressPercentage = Math.min((count || 0) / (dailyGoal || 1), 1);
-  const strokeDashoffset = CIRCUMFERENCE * (1 - progressPercentage);
 
   // Animated styles
   const circleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const rotationStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  // Animated progress props - smooth transition for progress bar
+  const animatedProgressStyle = useAnimatedProps(() => {
+    const strokeDashoffset = CIRCUMFERENCE * (1 - animatedProgress.value);
+    return {
+      strokeDashoffset,
+    };
+  });
 
-  // Handle tap animation
+  // Handle tap animation - smooth button press feel
   const handleTap = () => {
+    // Scale down then back up for natural button press feel
     scale.value = withSequence(
-      withSpring(1.1, { duration: 150 }),
-      withSpring(1, { duration: 150 })
+      withTiming(0.95, { duration: 100 }), // Quick scale down
+      withSpring(1, { 
+        duration: 200,
+        dampingRatio: 0.6,
+        stiffness: 150
+      }) // Smooth spring back up
     );
     onIncrement();
   };
 
-  // Goal achievement animation
+  // Smooth progress animation when count changes
   React.useEffect(() => {
-    if (isGoalReached) {
-      rotation.value = withSequence(
-        withTiming(360, { duration: 1000 }),
-        withTiming(0, { duration: 0 })
-      );
-    }
-  }, [isGoalReached, rotation]);
+    animatedProgress.value = withTiming(progressPercentage, {
+      duration: 400, // 400ms smooth animation
+    });
+  }, [progressPercentage, animatedProgress]);
 
   return (
     <TouchableOpacity onPress={handleTap} activeOpacity={0.9} disabled={isLoading}>
@@ -90,8 +99,8 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
             fill="#FFFFFF"
             fillOpacity={0.9}
           />
-          {/* Progress circle - blue to orange when complete */}
-          <Circle
+          {/* Progress circle - blue to orange when complete with smooth animation */}
+          <AnimatedCircle
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS}
@@ -99,7 +108,7 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
             strokeWidth={STROKE_WIDTH}
             fill="transparent"
             strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={strokeDashoffset}
+            animatedProps={animatedProgressStyle}
             strokeLinecap="round"
             transform={`rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})`}
           />

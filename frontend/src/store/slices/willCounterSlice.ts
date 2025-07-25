@@ -41,6 +41,17 @@ export const incrementCount = createAsyncThunk(
   }
 );
 
+export const resetCount = createAsyncThunk(
+  'willCounter/resetCount',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      return await apiService.resetTodayCount(userId);
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const syncOfflineIncrements = createAsyncThunk(
   'willCounter/syncOfflineIncrements',
   async (params: { userId: string; increments: number }, { rejectWithValue }) => {
@@ -112,6 +123,21 @@ const willCounterSlice = createSlice({
         // On network error, increment offline
         state.todayCount += 1;
         state.lastIncrementTime = new Date().toISOString();
+      })
+      // Reset count
+      .addCase(resetCount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetCount.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentRecord = action.payload;
+        state.todayCount = 0;
+        state.lastIncrementTime = null;
+      })
+      .addCase(resetCount.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Sync offline increments
       .addCase(syncOfflineIncrements.pending, (state) => {

@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -18,7 +20,6 @@ import {
   selectError
 } from '../../store/slices/willCounterSlice';
 import CircularCounter from './CircularCounter';
-import GoalAchievement from './GoalAchievement';
 
 // Type definitions
 interface CounterHistoryItem {
@@ -38,7 +39,8 @@ const WillCounterScreen: React.FC = () => {
   // Local state for UI elements
   const [dailyGoal] = useState<number>(10);
   const [streak, setStreak] = useState<number>(0);
-  const [showGoalAchievement, setShowGoalAchievement] = useState(false);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [hasShownModalForCurrentGoal, setHasShownModalForCurrentGoal] = useState(false);
 
   // Load today's count on component mount
   useEffect(() => {
@@ -85,18 +87,26 @@ const WillCounterScreen: React.FC = () => {
     dispatch(incrementCount(''));
     triggerHaptic('light');
     
-    // Check if daily goal is reached
-    if (count + 1 === dailyGoal) {
+    // Check if daily goal is reached - show modal immediately
+    if (count + 1 === dailyGoal && !hasShownModalForCurrentGoal) {
       triggerHaptic('heavy');
       setStreak(prev => prev + 1);
-      setShowGoalAchievement(true);
+      setShowGoalModal(true);
+      setHasShownModalForCurrentGoal(true);
     }
   }, [dispatch, count, dailyGoal, triggerHaptic]);
 
-  // Handle goal achievement completion
-  const handleGoalAnimationComplete = useCallback(() => {
-    setShowGoalAchievement(false);
+  // Handle modal dismiss
+  const handleModalDismiss = useCallback(() => {
+    setShowGoalModal(false);
   }, []);
+
+  // Reset modal flag when count resets (new day)
+  useEffect(() => {
+    if (count < dailyGoal) {
+      setHasShownModalForCurrentGoal(false);
+    }
+  }, [count, dailyGoal]);
 
 
 
@@ -150,11 +160,28 @@ const WillCounterScreen: React.FC = () => {
 
       </ScrollView>
 
-      {/* Goal Achievement Overlay */}
-      <GoalAchievement 
-        isVisible={showGoalAchievement}
-        onAnimationComplete={handleGoalAnimationComplete}
-      />
+      {/* Goal Achievement Modal */}
+      <Modal
+        visible={showGoalModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleModalDismiss}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.celebrationEmoji}>🎉</Text>
+            <Text style={styles.congratsTitle}>Congratulations!</Text>
+            <Text style={styles.congratsMessage}>You reached your goal!</Text>
+            <TouchableOpacity 
+              style={styles.dismissButton}
+              onPress={handleModalDismiss}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.dismissButtonText}>Awesome!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -253,6 +280,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+    minWidth: 280,
+  },
+  celebrationEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  congratsTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  congratsMessage: {
+    fontSize: 16,
+    color: '#64748B',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  dismissButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dismissButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

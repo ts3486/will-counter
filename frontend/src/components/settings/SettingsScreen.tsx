@@ -7,10 +7,13 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch, useSelector } from 'react-redux';
+import { resetCount, selectTodayCount, selectIsLoading } from '../../store/slices/willCounterSlice';
 
 interface AppPreferences {
   soundEnabled: boolean;
@@ -23,6 +26,10 @@ interface AppPreferences {
 const PREFERENCES_KEY = '@will_counter_preferences';
 
 const SettingsScreen: React.FC = () => {
+  const dispatch = useDispatch();
+  const todayCount = useSelector(selectTodayCount);
+  const isLoading = useSelector(selectIsLoading);
+  
   const [preferences, setPreferences] = useState<AppPreferences>({
     soundEnabled: true,
     hapticEnabled: true,
@@ -30,6 +37,8 @@ const SettingsScreen: React.FC = () => {
     notifications: true,
     dailyGoal: 10,
   });
+  
+  const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
     loadPreferences();
@@ -55,6 +64,21 @@ const SettingsScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to save preferences:', error);
       Alert.alert('Error', 'Failed to save preferences');
+    }
+  };
+
+  const handleResetCount = () => {
+    setShowResetModal(true);
+  };
+
+  const confirmResetCount = async () => {
+    try {
+      await dispatch(resetCount(''));
+      setShowResetModal(false);
+      Alert.alert('Success', 'Your will count has been reset to 0.');
+    } catch (error) {
+      setShowResetModal(false);
+      Alert.alert('Error', 'Failed to reset count. Please try again.');
     }
   };
 
@@ -214,6 +238,14 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>Data Management</Text>
           
           {renderActionItem(
+            'Reset Today\'s Count',
+            `Current count: ${todayCount} • Reset to 0`,
+            '🔄',
+            handleResetCount,
+            false
+          )}
+          
+          {renderActionItem(
             'Export Data',
             'Download your progress data',
             '💾',
@@ -273,6 +305,47 @@ const SettingsScreen: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Reset Count Warning Modal */}
+      <Modal
+        visible={showResetModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowResetModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.warningEmoji}>⚠️</Text>
+            <Text style={styles.modalTitle}>Reset Today's Count?</Text>
+            <Text style={styles.modalMessage}>
+              You currently have {todayCount} will exercises recorded today.
+              {"\n\n"}
+              This will reset your count to 0 and save the change to the database.
+              {"\n\n"}
+              This action cannot be undone.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={() => setShowResetModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.resetButton}
+                onPress={confirmResetCount}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                <Text style={styles.resetButtonText}>
+                  {isLoading ? 'Resetting...' : 'Reset Count'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -409,6 +482,81 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     lineHeight: 20,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+    minWidth: 320,
+    maxWidth: 400,
+  },
+  warningEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#64748B',
+    marginBottom: 32,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 16,
+    width: '100%',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#64748B',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resetButton: {
+    flex: 1,
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  resetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

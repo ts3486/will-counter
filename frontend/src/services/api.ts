@@ -185,6 +185,88 @@ export const apiService = {
     }
   },
 
+  async resetTodayCount(userId: string) {
+    if (useSupabaseDirectly) {
+      try {
+        // First, ensure we have a valid user
+        const testUserAuth0Id = 'test-user-1';
+        const testUserUuid = await this.ensureUserExists(testUserAuth0Id, 'test@example.com');
+        const today = new Date().toISOString().split('T')[0];
+        console.log('Resetting count for user UUID:', testUserUuid, 'date:', today);
+        
+        // Check if record exists for today
+        const getResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?user_id=eq.${testUserUuid}&date=eq.${today}`, {
+          headers: getSupabaseHeaders(true)
+        });
+        const currentData = await getResponse.json();
+        const currentRecord = currentData[0];
+        
+        if (currentRecord) {
+          // Update existing record to reset count
+          const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?id=eq.${currentRecord.id}`, {
+            method: 'PATCH',
+            headers: {
+              ...getSupabaseHeaders(true),
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ 
+              count: 0, 
+              timestamps: [],
+              updated_at: new Date().toISOString() 
+            })
+          });
+          
+          if (!updateResponse.ok) {
+            const errorText = await updateResponse.text();
+            throw new Error(`Failed to reset count: ${errorText}`);
+          }
+          
+          const updatedData = await updateResponse.json();
+          return updatedData[0];
+        } else {
+          // Create new record with count 0
+          const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts`, {
+            method: 'POST',
+            headers: {
+              ...getSupabaseHeaders(true),
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({
+              user_id: testUserUuid,
+              count: 0,
+              date: today,
+              timestamps: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+          });
+          
+          if (!createResponse.ok) {
+            const errorText = await createResponse.text();
+            throw new Error(`Failed to create reset record: ${errorText}`);
+          }
+          
+          const newData = await createResponse.json();
+          return newData[0] || newData;
+        }
+      } catch (error) {
+        console.error('Error resetting count:', error);
+        throw error;
+      }
+    } else {
+      // Use backend API
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_BASE_URL}/api/will-counts/reset`, {
+        method: 'POST',
+        headers,
+      });
+      if (!response.ok) throw new Error('Failed to reset count');
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    }
+  },
+
   async createUser(auth0Id: string, email: string) {
     if (useSupabaseDirectly) {
       // Direct Supabase REST API call
