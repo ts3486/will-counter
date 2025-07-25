@@ -3,12 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 
 import WillCounterScreen from '../components/counter/WillCounterScreen';
-import StatisticsScreen from '../components/statistics/StatisticsScreen';
+// import StatisticsScreen from '../components/statistics/StatisticsScreen'; // Removed Statistics page
 import SettingsScreen from '../components/settings/SettingsScreen';
 
 export type TabParamList = {
   Counter: undefined;
-  Statistics: undefined;
+  // Statistics: undefined; // Removed Statistics page
   Settings: undefined;
 };
 
@@ -57,6 +57,7 @@ const TabNavigator = () => {
           ),
         }}
       />
+      {/*
       <Tab.Screen
         name="Statistics"
         component={StatisticsScreen}
@@ -69,6 +70,7 @@ const TabNavigator = () => {
           ),
         }}
       />
+      */}
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}

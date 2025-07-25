@@ -167,6 +167,7 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         {/* App Preferences */}
+        {/*
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Preferences</Text>
           
@@ -202,6 +203,7 @@ const SettingsScreen: React.FC = () => {
             (value) => updatePreference('darkMode', value)
           )}
         </View>
+        */}
 
         {/* Goal Settings */}
         <View style={styles.section}>
@@ -234,17 +236,16 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         {/* Data Management */}
+        {/*
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Management</Text>
-          
           {renderActionItem(
-            'Reset Today\'s Count',
+            "Reset Today's Count",
             `Current count: ${todayCount} • Reset to 0`,
             '🔄',
             handleResetCount,
             false
           )}
-          
           {renderActionItem(
             'Export Data',
             'Download your progress data',
@@ -253,7 +254,6 @@ const SettingsScreen: React.FC = () => {
               Alert.alert('Export Data', 'Data export feature coming soon!');
             }
           )}
-
           {renderActionItem(
             'Clear All Data',
             'Reset all counters and history',
@@ -262,11 +262,36 @@ const SettingsScreen: React.FC = () => {
             true
           )}
         </View>
+        */}
+
+        {/* Recent Today's Count */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Today's Count</Text>
+          
+          {/* Current count display */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <Text style={{ fontSize: 24, color: "#3B82F6" }}>📊</Text>
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>Today's Progress</Text>
+                <Text style={styles.settingSubtitle}>Current count: {todayCount}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Reset count button */}
+          {renderActionItem(
+            'Reset Today\'s Count',
+            `Current count: ${todayCount} • Reset to 0`,
+            '🔄',
+            handleResetCount,
+            false
+          )}
+        </View>
 
         {/* App Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
-          
           {renderActionItem(
             'App Version',
             'Will Counter v1.0.0',
@@ -278,7 +303,6 @@ const SettingsScreen: React.FC = () => {
               );
             }
           )}
-
           {renderActionItem(
             'Privacy Policy',
             'How we protect your data',
@@ -287,7 +311,6 @@ const SettingsScreen: React.FC = () => {
               Alert.alert('Privacy Policy', 'Privacy policy coming soon!');
             }
           )}
-
           {renderActionItem(
             'Rate this App',
             'Leave a review on the App Store',
@@ -299,11 +322,12 @@ const SettingsScreen: React.FC = () => {
         </View>
 
         {/* Developer Section */}
-        <View style={styles.developerSection}>
-          <Text style={styles.developerText}>
-            Made with ❤️ for building stronger willpower
-          </Text>
-        </View>
+        {/*
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Developer</Text>
+          {/* Developer-related settings and actions */}
+        {/*</View>
+        */}
       </ScrollView>
 
       {/* Reset Count Warning Modal */}
