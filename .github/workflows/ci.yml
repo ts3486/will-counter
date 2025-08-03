@@ -66,11 +66,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     
-    - name: Run tests
+    - name: Run security tests
+      run: ./gradlew test --tests "*security*"
+    
+    - name: Run all tests
       run: ./gradlew test
     
     - name: Run build
       run: ./gradlew build
+    
+    - name: Check for dependency vulnerabilities
+      run: ./gradlew dependencyCheckAnalyze || echo "Dependency check completed with warnings"
+      continue-on-error: true
 
   security-scan:
     name: Security Scan

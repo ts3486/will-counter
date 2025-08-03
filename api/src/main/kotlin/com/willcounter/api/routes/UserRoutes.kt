@@ -3,6 +3,9 @@ package com.willcounter.api.routes
 import com.willcounter.api.dto.*
 import com.willcounter.api.services.DatabaseService
 import com.willcounter.api.config.Auth0Principal
+import com.willcounter.api.validation.InputValidator
+import com.willcounter.api.security.ErrorHandler
+import com.willcounter.api.security.RateLimiter
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -16,29 +19,43 @@ fun Route.userRoutes(databaseService: DatabaseService) {
         authenticate("auth0") {
             post {
                 try {
+                    // Check rate limit for auth endpoints
+                    if (RateLimiter.isRateLimited(call, "auth")) {
+                        ErrorHandler.handleRateLimitExceeded(call)
+                        return@post
+                    }
+                    
                     // Get authenticated user info
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
-                        ))
+                        ErrorHandler.handleAuthenticationError(call)
                         return@post
                     }
 
                     val request = call.receive<CreateUserRequest>()
                     
+                    val validatedAuth0Id = try {
+                        InputValidator.validateAuth0Id(request.auth0Id)
+                    } catch (e: InputValidator.ValidationException) {
+                        ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                        return@post
+                    }
+                    
+                    val validatedEmail = try {
+                        InputValidator.validateEmail(request.email)
+                    } catch (e: InputValidator.ValidationException) {
+                        ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                        return@post
+                    }
+                    
                     // Verify the auth0_id matches the authenticated user
-                    if (request.auth0Id != auth0Id) {
-                        call.respond(HttpStatusCode.Forbidden, ApiResponse<Any>(
-                            success = false,
-                            error = "Cannot create user for different auth0_id"
-                        ))
+                    if (validatedAuth0Id != auth0Id) {
+                        ErrorHandler.handleAuthorizationError(call)
                         return@post
                     }
                     
                     // Check if user already exists
-                    val existingUser = databaseService.getUserByAuth0Id(request.auth0Id)
+                    val existingUser = databaseService.getUserByAuth0Id(validatedAuth0Id)
                     if (existingUser != null) {
                         call.respond(HttpStatusCode.OK, ApiResponse(
                             success = true,
@@ -48,109 +65,110 @@ fun Route.userRoutes(databaseService: DatabaseService) {
                         return@post
                     }
                     
-                    val user = databaseService.createUser(request)
+                    val user = databaseService.createUser(CreateUserRequest(validatedAuth0Id, validatedEmail))
                     call.respond(HttpStatusCode.Created, ApiResponse(
                         success = true,
                         data = user,
                         message = "User created successfully"
                     ))
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to create user: ${e.message}"
-                    ))
+                    ErrorHandler.handleInternalError(call, e)
                 }
             }
             
             get("/me") {
                 try {
-                    val principal = call.principal<Auth0Principal>()
-                    val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
-                        ))
+                    // Check rate limit
+                    if (RateLimiter.isRateLimited(call, "api")) {
+                        ErrorHandler.handleRateLimitExceeded(call)
                         return@get
                     }
                     
-                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        ErrorHandler.handleAuthenticationError(call)
+                        return@get
+                    }
+                    
+                    val validatedAuth0Id = try {
+                        InputValidator.validateAuth0Id(auth0Id)
+                    } catch (e: InputValidator.ValidationException) {
+                        ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                        return@get
+                    }
+                    
+                    val user = databaseService.getUserByAuth0Id(validatedAuth0Id)
                     if (user != null) {
                         call.respond(HttpStatusCode.OK, ApiResponse(
                             success = true,
                             data = user
                         ))
                     } else {
-                        call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
-                            success = false,
-                            error = "User not found"
-                        ))
+                        ErrorHandler.handleUserNotFound(call)
                     }
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to get user: ${e.message}"
-                    ))
+                    ErrorHandler.handleInternalError(call, e)
                 }
             }
         }
         
         get("/{auth0Id}") {
             try {
-                val auth0Id = call.parameters["auth0Id"] ?: run {
-                    call.respond(HttpStatusCode.BadRequest, ApiResponse<Any>(
-                        success = false,
-                        error = "Auth0 ID is required"
-                    ))
+                // Check rate limit
+                if (RateLimiter.isRateLimited(call, "api")) {
+                    ErrorHandler.handleRateLimitExceeded(call)
                     return@get
                 }
                 
-                val user = databaseService.getUserByAuth0Id(auth0Id)
+                val auth0Id = call.parameters["auth0Id"]
+                val validatedAuth0Id = try {
+                    InputValidator.validateAuth0Id(auth0Id)
+                } catch (e: InputValidator.ValidationException) {
+                    ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                    return@get
+                }
+                
+                val user = databaseService.getUserByAuth0Id(validatedAuth0Id)
                 if (user != null) {
                     call.respond(HttpStatusCode.OK, ApiResponse(
                         success = true,
                         data = user
                     ))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
-                        success = false,
-                        error = "User not found"
-                    ))
+                    ErrorHandler.handleUserNotFound(call)
                 }
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                    success = false,
-                    error = "Failed to get user: ${e.message}"
-                ))
+                ErrorHandler.handleInternalError(call, e)
             }
         }
         
         post("/{userId}/login") {
             try {
-                val userId = call.parameters["userId"] ?: run {
-                    call.respond(HttpStatusCode.BadRequest, ApiResponse<Any>(
-                        success = false,
-                        error = "User ID is required"
-                    ))
+                // Check rate limit
+                if (RateLimiter.isRateLimited(call, "api")) {
+                    ErrorHandler.handleRateLimitExceeded(call)
                     return@post
                 }
                 
-                val success = databaseService.updateLastLogin(userId)
+                val userId = call.parameters["userId"]
+                val validatedUserId = try {
+                    InputValidator.validateUserId(userId)
+                } catch (e: InputValidator.ValidationException) {
+                    ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                    return@post
+                }
+                
+                val success = databaseService.updateLastLogin(validatedUserId)
                 if (success) {
                     call.respond(HttpStatusCode.OK, ApiResponse<Nothing>(
                         success = true,
                         message = "Last login updated"
                     ))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
-                        success = false,
-                        error = "User not found"
-                    ))
+                    ErrorHandler.handleUserNotFound(call)
                 }
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                    success = false,
-                    error = "Failed to update login: ${e.message}"
-                ))
+                ErrorHandler.handleInternalError(call, e)
             }
         }
     }
