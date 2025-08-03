@@ -46,6 +46,51 @@ jest.mock('../../../src/store/slices/willCounterSlice', () => ({
   selectTodayCount: jest.fn(),
 }));
 
+// Mock Expo modules that cause issues in Jest
+jest.mock('expo-auth-session', () => ({
+  useAuthRequest: () => [null, null, jest.fn()],
+  exchangeCodeAsync: jest.fn(),
+}));
+
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  openAuthSessionAsync: jest.fn(),
+}));
+
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(),
+  setItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}));
+
+// Mock auth0 config
+jest.mock('../../../src/config/auth0', () => ({
+  auth0Config: {
+    domain: 'test.auth0.com',
+    clientId: 'test-client-id',
+    audience: 'test-audience',
+    redirectUri: 'test://redirect',
+    logoutUrl: 'test://logout',
+  },
+  authEndpoints: {
+    authorizationEndpoint: 'https://test.auth0.com/authorize',
+    tokenEndpoint: 'https://test.auth0.com/oauth/token',
+    userInfoEndpoint: 'https://test.auth0.com/userinfo',
+    logoutUrl: 'https://test.auth0.com/logout',
+  },
+  createAuthRequest: jest.fn(),
+}));
+
+// Mock AuthContext
+jest.mock('../../../src/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    logout: jest.fn(),
+    loading: false,
+    isAuthenticated: true,
+    user: { name: 'Test User' },
+  }),
+}));
+
 describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
