@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetCount, selectTodayCount, selectIsLoading } from '../../store/slices/willCounterSlice';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AppPreferences {
   soundEnabled: boolean;
@@ -29,6 +30,7 @@ const SettingsScreen: React.FC = () => {
   const dispatch = useDispatch();
   const todayCount = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
+  const { logout, loading: authLoading } = useAuth();
   
   const [preferences, setPreferences] = useState<AppPreferences>({
     soundEnabled: true,
@@ -97,6 +99,27 @@ const SettingsScreen: React.FC = () => {
               Alert.alert('Success', 'All data has been cleared.');
             } catch (error) {
               Alert.alert('Error', 'Failed to clear data.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to logout. Please try again.');
             }
           },
         },
@@ -318,6 +341,18 @@ const SettingsScreen: React.FC = () => {
             () => {
               Alert.alert('Rate App', 'Thank you for considering to rate our app!');
             }
+          )}
+        </View>
+
+        {/* Account Management */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          {renderActionItem(
+            'Logout',
+            'Sign out of your account',
+            '🚪',
+            handleLogout,
+            true
           )}
         </View>
 

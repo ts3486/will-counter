@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import { auth0Config, authEndpoints, createAuthRequest } from '../config/auth0';
 import { useDispatch } from 'react-redux';
 import { setUser, clearUser } from '../store/slices/userSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -108,8 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserState(userInfo);
           dispatch(setUser(userInfo));
           
-          // Create or get user in your API
-          await createOrGetUser(userInfo);
+          // Note: User creation is handled by the frontend Supabase service
+          // No need to call backend API since frontend works directly with Supabase
         }
       }
     } catch (error) {
@@ -141,15 +142,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await SecureStore.deleteItemAsync('refreshToken');
       await SecureStore.deleteItemAsync('userInfo');
       
-      // Clear Auth0 session
-      const logoutUrl = `${authEndpoints.logoutUrl}?client_id=${auth0Config.clientId}&returnTo=${encodeURIComponent(auth0Config.logoutUrl)}`;
-      await WebBrowser.openAuthSessionAsync(logoutUrl, auth0Config.logoutUrl);
+      // Clear AsyncStorage data
+      await AsyncStorage.multiRemove(['@will_counter_data', '@will_counter_preferences']);
       
+      // Update authentication state
       setIsAuthenticated(false);
       setUserState(null);
       dispatch(clearUser());
+      
+      console.log('Logout completed successfully');
+      
+      // Show success message
+      Alert.alert('Success', 'You have been logged out successfully.');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Even if cleanup fails partially, ensure auth state is cleared
+      setIsAuthenticated(false);
+      setUserState(null);
+      dispatch(clearUser());
     } finally {
       setLoading(false);
     }
@@ -161,29 +171,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return accessToken;
     } catch (error) {
       return null;
-    }
-  };
-
-  const createOrGetUser = async (auth0User: any) => {
-    try {
-      const token = await getAccessToken();
-      const response = await fetch(`http://localhost:8080/api/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({
-          auth0_id: auth0User.sub,
-          email: auth0User.email,
-        }),
-      });
-      
-      if (!response.ok && response.status !== 409) { // 409 = user already exists
-        throw new Error('Failed to create/get user');
-      }
-    } catch (error) {
-      console.error('User creation failed:', error);
     }
   };
 
