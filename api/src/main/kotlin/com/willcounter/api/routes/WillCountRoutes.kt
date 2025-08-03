@@ -3,6 +3,9 @@ package com.willcounter.api.routes
 import com.willcounter.api.dto.*
 import com.willcounter.api.services.DatabaseService
 import com.willcounter.api.config.Auth0Principal
+import com.willcounter.api.validation.InputValidator
+import com.willcounter.api.security.ErrorHandler
+import com.willcounter.api.security.RateLimiter
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -16,22 +19,29 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
         authenticate("auth0") {
             get("/today") {
                 try {
+                    // Check rate limit
+                    if (RateLimiter.isRateLimited(call, "api")) {
+                        ErrorHandler.handleRateLimitExceeded(call)
+                        return@get
+                    }
+                    
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
-                        ))
+                        ErrorHandler.handleAuthenticationError(call)
+                        return@get
+                    }
+                    
+                    val validatedAuth0Id = try {
+                        InputValidator.validateAuth0Id(auth0Id)
+                    } catch (e: InputValidator.ValidationException) {
+                        ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
                         return@get
                     }
                     
                     // Get user by auth0_id first
-                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    val user = databaseService.getUserByAuth0Id(validatedAuth0Id)
                     if (user == null) {
-                        call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
-                            success = false,
-                            error = "User not found"
-                        ))
+                        ErrorHandler.handleUserNotFound(call)
                         return@get
                     }
                     
@@ -42,37 +52,38 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                             data = willCount
                         ))
                     } else {
-                        call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                            success = false,
-                            error = "Failed to get today's count"
-                        ))
+                        ErrorHandler.handleDatabaseError(call, Exception("Failed to retrieve today's count"))
                     }
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to get today's count: ${e.message}"
-                    ))
+                    ErrorHandler.handleInternalError(call, e)
                 }
             }
             
             post("/increment") {
                 try {
+                    // Check rate limit for increment endpoint
+                    if (RateLimiter.isRateLimited(call, "increment")) {
+                        ErrorHandler.handleRateLimitExceeded(call)
+                        return@post
+                    }
+                    
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
-                        ))
+                        ErrorHandler.handleAuthenticationError(call)
+                        return@post
+                    }
+                    
+                    val validatedAuth0Id = try {
+                        InputValidator.validateAuth0Id(auth0Id)
+                    } catch (e: InputValidator.ValidationException) {
+                        ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
                         return@post
                     }
                     
                     // Get user by auth0_id first
-                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    val user = databaseService.getUserByAuth0Id(validatedAuth0Id)
                     if (user == null) {
-                        call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
-                            success = false,
-                            error = "User not found"
-                        ))
+                        ErrorHandler.handleUserNotFound(call)
                         return@post
                     }
                     
@@ -84,49 +95,49 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                             message = "Count incremented successfully"
                         ))
                     } else {
-                        call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                            success = false,
-                            error = "Failed to increment count"
-                        ))
+                        ErrorHandler.handleDatabaseError(call, Exception("Failed to increment count"))
                     }
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to increment count: ${e.message}"
-                    ))
+                    ErrorHandler.handleInternalError(call, e)
                 }
             }
         }
         
         get("/{userId}/statistics") {
             try {
-                val userId = call.parameters["userId"] ?: run {
-                    call.respond(HttpStatusCode.BadRequest, ApiResponse<Any>(
-                        success = false,
-                        error = "User ID is required"
-                    ))
+                // Check rate limit
+                if (RateLimiter.isRateLimited(call, "api")) {
+                    ErrorHandler.handleRateLimitExceeded(call)
                     return@get
                 }
                 
-                val days = call.request.queryParameters["days"]?.toIntOrNull() ?: 30
+                val userId = call.parameters["userId"]
+                val validatedUserId = try {
+                    InputValidator.validateUserId(userId)
+                } catch (e: InputValidator.ValidationException) {
+                    ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                    return@get
+                }
                 
-                val statistics = databaseService.getUserStatistics(userId, days)
+                val daysParam = call.request.queryParameters["days"]
+                val validatedDays = try {
+                    InputValidator.validateDays(daysParam)
+                } catch (e: InputValidator.ValidationException) {
+                    ErrorHandler.handleValidationError(call, e.message ?: "Validation failed")
+                    return@get
+                }
+                
+                val statistics = databaseService.getUserStatistics(validatedUserId, validatedDays)
                 if (statistics != null) {
                     call.respond(HttpStatusCode.OK, ApiResponse(
                         success = true,
                         data = statistics
                     ))
                 } else {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to get statistics"
-                    ))
+                    ErrorHandler.handleDatabaseError(call, Exception("Failed to retrieve statistics"))
                 }
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                    success = false,
-                    error = "Failed to get statistics: ${e.message}"
-                ))
+                ErrorHandler.handleInternalError(call, e)
             }
         }
     }
