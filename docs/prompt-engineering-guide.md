@@ -26,7 +26,9 @@ This guide provides comprehensive strategies for using Claude AI effectively in 
 | **Requirements Analysis** | [Requirements Gathering](/docs/claude-prompts/templates/requirements-gathering.md) |
 | **React Native Component** | [Component Generator](/docs/claude-prompts/code-generation/react-native/component-template.md) |
 | **Kotlin API Endpoint** | [API Endpoint Generator](/docs/claude-prompts/code-generation/kotlin-ktor/api-endpoint.md) |
+| **Supabase Schema** | [Database Schema Generator](/docs/claude-prompts/code-generation/supabase/schema-template.md) |
 | **Bug Investigation** | [Debugging Template](/docs/claude-prompts/templates/debugging-template.md) |
+| **Testing Strategy** | [Testing Template](/docs/claude-prompts/templates/testing-template.md) |
 
 ### Basic Usage Pattern
 
@@ -200,8 +202,15 @@ Include this context block in all prompts:
 #### Supabase Database Patterns
 ```markdown
 **Template**: /docs/claude-prompts/code-generation/supabase/schema-template.md
-**Generates**: Database schemas with RLS policies
-**Includes**: Tables, indexes, functions, security policies
+**Generates**: Database schemas with RLS policies and real-time support
+**Includes**: Tables, indexes, functions, security policies, migration scripts
+```
+
+#### Testing Strategy Templates
+```markdown
+**Template**: /docs/claude-prompts/templates/testing-template.md
+**Generates**: Comprehensive testing strategies and implementations
+**Includes**: Unit tests, integration tests, E2E tests, performance tests
 ```
 
 ### Workflow Templates

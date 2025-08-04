@@ -11,11 +11,14 @@ claude-prompts/
 │   ├── code-review-template.md         # Code review prompts
 │   ├── requirements-gathering.md       # Requirements analysis
 │   ├── debugging-template.md           # Debugging assistance
-│   └── testing-template.md             # Test generation
+│   └── testing-template.md             # Test generation and strategy
 ├── code-generation/                    # Code generation templates
 │   ├── react-native/                   # React Native patterns
+│   │   └── component-template.md       # Component generator
 │   ├── kotlin-ktor/                    # Kotlin/Ktor patterns
+│   │   └── api-endpoint.md             # API endpoint generator
 │   └── supabase/                       # Database patterns
+│       └── schema-template.md          # Database schema generator
 ├── workflows/                          # Complete workflow prompts
 │   ├── feature-development.md          # End-to-end feature development
 │   ├── bug-fix-workflow.md             # Bug investigation and fixing
@@ -84,6 +87,9 @@ cat docs/claude-prompts/code-generation/react-native/component-template.md
 
 # Generate Kotlin API endpoint
 cat docs/claude-prompts/code-generation/kotlin-ktor/api-endpoint.md
+
+# Generate Supabase database schema
+cat docs/claude-prompts/code-generation/supabase/schema-template.md
 ```
 
 ## Best Practices
