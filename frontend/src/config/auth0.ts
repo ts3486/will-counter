@@ -4,15 +4,20 @@ import * as WebBrowser from 'expo-web-browser';
 WebBrowser.maybeCompleteAuthSession();
 
 export const auth0Config = {
-  domain: 'dev-fetoxen063fxtlxz.jp.auth0.com',
-  clientId: 'kya3eUM1e3lltlIO7IRDtu98HJ7ElSvH',
-  audience: 'https://dev-fetoxen063fxtlxz.jp.auth0.com/api/v2/',
+  domain: process.env.EXPO_PUBLIC_AUTH0_DOMAIN || '',
+  clientId: process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID || '',
+  audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE || '',
   scope: 'openid profile email offline_access',
   additionalParameters: {},
   customScheme: 'willcounter',
   redirectUri: 'willcounter://auth0-callback',
   logoutUrl: 'willcounter://auth0-logout'
 };
+
+// Validate required Auth0 configuration
+if (!auth0Config.domain || !auth0Config.clientId || !auth0Config.audience) {
+  console.warn('⚠️ Auth0 configuration incomplete. Please set EXPO_PUBLIC_AUTH0_DOMAIN, EXPO_PUBLIC_AUTH0_CLIENT_ID, and EXPO_PUBLIC_AUTH0_AUDIENCE environment variables.');
+}
 
 export const authEndpoints = {
   authorizationEndpoint: `https://${auth0Config.domain}/oauth/authorize`,

@@ -1,9 +1,18 @@
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE_URL = 'http://localhost:8080';
-const SUPABASE_URL = 'https://mrbyvoccayqxddwrnsye.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yYnl2b2NjYXlxeGRkd3Juc3llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMDY2MzgsImV4cCI6MjA2MTU4MjYzOH0.HZvhGXkPsd1Uq_UQRQrfXChVhUy7jb3S5AqYl9x1qkI';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yYnl2b2NjYXlxeGRkd3Juc3llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjAwNjYzOCwiZXhwIjoyMDYxNTgyNjM4fQ.XcWsv0uJ4UfrL4usgwUmk40Ktq93u-m8lWQ_V3XlgKA';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_KEY = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Validate required environment variables
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.warn('⚠️ Supabase configuration missing. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.');
+}
+
+if (!SUPABASE_SERVICE_KEY) {
+  console.warn('⚠️ Supabase service key missing. Please set EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY environment variable for admin operations.');
+}
 
 // Fallback to Supabase REST API if backend is not available
 const useSupabaseDirectly = true; // Set to true to bypass backend
