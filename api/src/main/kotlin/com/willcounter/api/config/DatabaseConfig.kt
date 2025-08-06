@@ -14,13 +14,8 @@ import java.net.URI
 object DatabaseConfig {
     
     fun init() {
-        val supabaseUrl = System.getenv("SUPABASE_URL") ?: ""
-        val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
-        
-        if (supabaseUrl.isEmpty() || supabaseKey.isEmpty()) {
-            println("⚠️ Supabase configuration incomplete. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) environment variables.")
-            return
-        }
+        val supabaseUrl = System.getenv("SUPABASE_URL") ?: "https://mrbyvoccayqxddwrnsye.supabase.co"
+        val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yYnl2b2NjYXlxeGRkd3Juc3llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjAwNjYzOCwiZXhwIjoyMDYxNTgyNjM4fQ.XcWsv0uJ4UfrL4usgwUmk40Ktq93u-m8lWQ_V3XlgKA"
         
         // Test Supabase REST API connection instead of direct database
         println("Testing Supabase REST API connection...")
@@ -50,15 +45,9 @@ object DatabaseConfig {
     }
     
     fun testConnection(): Boolean = try {
-        val supabaseUrl = System.getenv("SUPABASE_URL") ?: ""
+        val supabaseUrl = System.getenv("SUPABASE_URL") ?: "https://mrbyvoccayqxddwrnsye.supabase.co"
         val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
-        
-        if (supabaseUrl.isEmpty() || supabaseKey.isEmpty()) {
-            println("Database connection test failed: Missing environment variables")
-            false
-        } else {
-            testSupabaseConnection(supabaseUrl, supabaseKey)
-        }
+        testSupabaseConnection(supabaseUrl, supabaseKey)
     } catch (e: Exception) {
         println("Database connection test failed: ${e.message}")
         false
