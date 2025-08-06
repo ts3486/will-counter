@@ -1,41 +1,89 @@
 # How to Use the Will Counter Prompts
 
 ## Overview
-This guide explains how to use the various prompts created for implementing features in your Will Counter application.
+This guide explains how to use the enhanced Claude prompt system for Will Counter development. We now have both legacy prompts and a new enhanced template system for more effective AI assistance.
 
-## Available Prompts
+## 🚀 Quick Start
 
-### 1. **Supabase Setup Prompt**
-**File**: `docs/claude-supabase-migration-prompt.md`
-**Purpose**: Migrate API from H2 to Supabase database
-**When to use**: When you want to connect your API to Supabase instead of H2 in-memory database
+**New to prompts?** Start with the **[Prompt Engineering Guide](/docs/prompt-engineering-guide.md)** for comprehensive guidance.
 
-### 2. **Frontend API Integration Prompt**
-**File**: `docs/claude-frontend-api-integration-prompt.md`
-**Purpose**: Replace mock data with real API calls
-**When to use**: When you want your frontend to call real API endpoints instead of using mock data
+**Need specific help?** Choose from the templates below based on your task.
 
-### 3. **Auth0 & RLS Implementation Prompt**
-**File**: `docs/claude-auth0-rls-prompt.md`
-**Purpose**: Implement Auth0 authentication and Row Level Security
-**When to use**: When you want to add user authentication and secure data access
+## 📋 Enhanced Template System (Recommended)
 
-### 4. **Auth0 NativeModule Fix Prompt**
-**File**: `docs/claude-auth0-native-module-fix-prompt.md`
-**Purpose**: Fix Auth0 native module errors in React Native/Expo
-**When to use**: When you get NativeModule errors during Auth0 login
+### Core Templates
+| Template | Purpose | When to Use |
+|----------|---------|-------------|
+| **[Feature Development](/docs/claude-prompts/workflows/feature-development.md)** | End-to-end feature implementation | Building new functionality from concept to deployment |
+| **[Code Review](/docs/claude-prompts/templates/code-review-template.md)** | Comprehensive code analysis | Reviewing PRs or getting feedback on code quality |
+| **[Requirements Gathering](/docs/claude-prompts/templates/requirements-gathering.md)** | Feature analysis and planning | Planning new features or clarifying requirements |
+| **[Debugging](/docs/claude-prompts/templates/debugging-template.md)** | Systematic troubleshooting | Investigating crashes, performance issues, or bugs |
 
-## How to Use These Prompts
+### Code Generation Templates
+| Template | Generates | Use Case |
+|----------|-----------|----------|
+| **[React Native Component](/docs/claude-prompts/code-generation/react-native/component-template.md)** | Complete TypeScript components | Creating new UI components with tests and styling |
+| **[Kotlin API Endpoint](/docs/claude-prompts/code-generation/kotlin-ktor/api-endpoint.md)** | RESTful API endpoints | Adding new backend functionality with proper validation |
 
-### **Step 1: Choose the Right Prompt**
-Based on what you want to implement:
+### Automation Tools
+| Tool | Purpose | Benefit |
+|------|---------|---------|
+| **[Checklist Generator](/docs/claude-prompts/automation/checklist-generator.md)** | Convert analysis into tasks | Track implementation progress systematically |
 
-| What You Want to Do | Use This Prompt |
-|---------------------|-----------------|
-| Connect API to Supabase | `claude-supabase-migration-prompt.md` |
-| Replace mock data with real API | `claude-frontend-api-integration-prompt.md` |
-| Add Auth0 authentication | `claude-auth0-rls-prompt.md` |
-| Fix Auth0 login errors | `claude-auth0-native-module-fix-prompt.md` |
+## 📚 Legacy Prompts (Still Available)
+
+### Migration and Setup Prompts
+| Prompt | Purpose | When to Use |
+|--------|---------|-------------|
+| **[Supabase Migration](/docs/claude-supabase-migration-prompt.md)** | Migrate API from H2 to Supabase | Connect API to Supabase instead of H2 in-memory database |
+| **[Frontend API Integration](/docs/claude-frontend-api-integration-prompt.md)** | Replace mock data with real API calls | Connect frontend to real API endpoints |
+| **[Auth0 & RLS Implementation](/docs/claude-auth0-rls-prompt.md)** | Implement Auth0 authentication and Row Level Security | Add user authentication and secure data access |
+| **[Auth0 NativeModule Fix](/docs/claude-auth0-native-module-fix-prompt.md)** | Fix Auth0 native module errors | Resolve NativeModule errors during Auth0 login |
+
+## 🎯 How to Use the Enhanced System
+
+### **Step 1: Choose the Right Template**
+**For most tasks**, use the enhanced templates:
+
+| What You Want to Do | Use This Template |
+|---------------------|------------------|
+| **Plan new feature** | [Feature Development Workflow](/docs/claude-prompts/workflows/feature-development.md) |
+| **Review code** | [Code Review Template](/docs/claude-prompts/templates/code-review-template.md) |
+| **Create React Native component** | [Component Generator](/docs/claude-prompts/code-generation/react-native/component-template.md) |
+| **Build API endpoint** | [API Endpoint Generator](/docs/claude-prompts/code-generation/kotlin-ktor/api-endpoint.md) |
+| **Fix bugs** | [Debugging Template](/docs/claude-prompts/templates/debugging-template.md) |
+| **Convert analysis to tasks** | [Checklist Generator](/docs/claude-prompts/automation/checklist-generator.md) |
+
+**For specific migration tasks**, use legacy prompts:
+
+| Migration Task | Use This Prompt |
+|----------------|-----------------|
+| Connect API to Supabase | [Supabase Migration](/docs/claude-supabase-migration-prompt.md) |
+| Replace mock data with real API | [Frontend API Integration](/docs/claude-frontend-api-integration-prompt.md) |
+| Add Auth0 authentication | [Auth0 & RLS](/docs/claude-auth0-rls-prompt.md) |
+| Fix Auth0 login errors | [Auth0 NativeModule Fix](/docs/claude-auth0-native-module-fix-prompt.md) |
+
+### **Step 2: Customize the Template**
+1. **Copy the template content**
+2. **Fill in your specific context**:
+   - Replace `[placeholders]` with actual values
+   - Add your code snippets or error messages
+   - Include relevant file paths
+   - Specify your requirements
+
+### **Step 3: Send to Claude**
+1. **Paste the customized prompt** into Claude
+2. **Include additional context** if needed
+3. **Ask follow-up questions** for clarification
+4. **Iterate** based on Claude's response
+
+### **Step 4: Use Automation Tools**
+1. **Generate checklists** from Claude's analysis
+2. **Track progress** with structured task lists
+3. **Update documentation** based on implementation
+4. **Share learnings** with the team
+
+## 📚 Legacy Prompts Usage
 
 ### **Step 2: Copy the Prompt Content**
 ```bash
@@ -189,10 +237,27 @@ grep -r "Auth0" docs/
 
 ## Next Steps
 
-1. **Choose the prompt** you need
-2. **Copy and paste** to Claude
-3. **Follow the implementation** steps
-4. **Test your changes**
-5. **Move to the next feature** if needed
+### **For Comprehensive Guidance**
+📚 **Read the [Prompt Engineering Guide](/docs/prompt-engineering-guide.md)** for in-depth strategies, best practices, and advanced techniques.
 
-Remember: These prompts are designed to be self-contained and provide everything needed for successful implementation! 
+### **Getting Started**
+1. **Choose the appropriate template** based on your task
+2. **Customize with your specific context** and requirements
+3. **Send to Claude** and follow the structured guidance
+4. **Use automation tools** to track progress and generate checklists
+5. **Iterate and improve** your prompts based on results
+
+### **Template Progression**
+- **Start Simple**: Use basic templates for straightforward tasks
+- **Add Complexity**: Combine templates for complex workflows
+- **Create Custom**: Develop project-specific prompt variations
+- **Share Learnings**: Contribute improvements back to the team
+
+### **Integration with Development Workflow**
+- **Planning**: Use requirements and feature development templates
+- **Implementation**: Leverage code generation templates
+- **Review**: Apply code review templates systematically
+- **Debugging**: Follow structured troubleshooting approaches
+- **Documentation**: Update guides based on successful implementations
+
+Remember: Effective AI assistance comes from clear, specific prompts with comprehensive context. The enhanced template system provides the structure, you provide the specifics! 
