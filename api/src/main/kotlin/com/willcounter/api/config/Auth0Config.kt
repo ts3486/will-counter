@@ -7,14 +7,8 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import java.util.concurrent.TimeUnit
 
 object Auth0Config {
-    private val domain = System.getenv("AUTH0_DOMAIN") ?: ""
-    private val audience = System.getenv("AUTH0_AUDIENCE") ?: ""
-    
-    init {
-        if (domain.isEmpty() || audience.isEmpty()) {
-            println("⚠️ Auth0 configuration incomplete. Please set AUTH0_DOMAIN and AUTH0_AUDIENCE environment variables.")
-        }
-    }
+    private val domain = System.getenv("AUTH0_DOMAIN") ?: "dev-fetoxen063fxtlxz.jp.auth0.com"
+    private val audience = System.getenv("AUTH0_AUDIENCE") ?: "https://dev-fetoxen063fxtlxz.jp.auth0.com/api/v2/"
     
     private val jwkProvider = JwkProviderBuilder(domain)
         .cached(10, 24, TimeUnit.HOURS)
