@@ -128,6 +128,15 @@ AUTH0_AUDIENCE=your-api-audience
 - **Auth0 React Native**: Authentication and authorization
 - **Supabase JS**: Database operations and real-time subscriptions
 
+### Claude Actions (AI-Powered Automation)
+This repository includes automated workflows powered by Claude (Anthropic's LLM):
+- 🤖 **Automated PR Reviews**: Intelligent code review feedback on pull requests
+- 🔍 **Issue Analysis**: Automatic triage and labeling of new issues
+- 📚 **Documentation Generation**: Auto-updated API and frontend documentation
+- 🛡️ **Security Scanning**: Detection of security-sensitive code patterns
+
+**Setup**: Add your `ANTHROPIC_API_KEY` to repository secrets. See [Claude Actions Documentation](.github/workflows/README.md) for full setup guide.
+
 ### State Management
 ```typescript
 // Store structure
