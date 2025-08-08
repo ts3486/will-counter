@@ -1,0 +1,41 @@
+{
+  "project": {
+    "name": "Will Counter",
+    "description": "A React Native app for tracking willpower and habit building with Kotlin backend API"
+  },
+  "tools": {
+    "enabled": [
+      "bash",
+      "edit",
+      "read",
+      "grep",
+      "glob"
+    ]
+  },
+  "commands": {
+    "test": "npm test",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
+    "build": {
+      "frontend": "cd frontend && npm run build",
+      "backend": "cd api && ./gradlew build"
+    },
+    "dev": {
+      "frontend": "cd frontend && npx expo start",
+      "backend": "cd api && ./gradlew run"
+    }
+  },
+  "directories": {
+    "frontend": "./frontend",
+    "backend": "./api",
+    "docs": "./docs",
+    "shared": "./shared"
+  },
+  "ignore": [
+    "node_modules/**",
+    "**/build/**",
+    "**/.expo/**",
+    "**/dist/**",
+    "**/.gradle/**"
+  ]
+}
