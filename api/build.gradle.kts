@@ -11,7 +11,22 @@ application {
     mainClass.set("com.willcounter.api.ApplicationKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    
+    // Load .env file if it exists and set as system properties
+    val envFile = file(".env")
+    val envProps = mutableListOf<String>()
+    if (envFile.exists()) {
+        envFile.readLines().forEach { line ->
+            if (line.isNotBlank() && !line.startsWith("#")) {
+                val parts = line.split("=", limit = 2)
+                if (parts.size == 2) {
+                    envProps.add("-D${parts[0]}=${parts[1]}")
+                }
+            }
+        }
+    }
+    
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment") + envProps
 }
 
 repositories {

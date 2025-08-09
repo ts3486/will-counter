@@ -14,8 +14,9 @@ import java.net.URI
 object DatabaseConfig {
     
     fun init() {
-        val supabaseUrl = System.getenv("SUPABASE_URL") ?: ""
-        val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
+        val supabaseUrl = System.getProperty("SUPABASE_URL") ?: System.getenv("SUPABASE_URL") ?: ""
+        val supabaseKey = System.getProperty("SUPABASE_SERVICE_ROLE_KEY") ?: System.getProperty("SUPABASE_ANON_KEY") 
+                           ?: System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
         
         if (supabaseUrl.isEmpty() || supabaseKey.isEmpty()) {
             println("⚠️ Supabase configuration incomplete. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) environment variables.")
@@ -50,8 +51,9 @@ object DatabaseConfig {
     }
     
     fun testConnection(): Boolean = try {
-        val supabaseUrl = System.getenv("SUPABASE_URL") ?: ""
-        val supabaseKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
+        val supabaseUrl = System.getProperty("SUPABASE_URL") ?: System.getenv("SUPABASE_URL") ?: ""
+        val supabaseKey = System.getProperty("SUPABASE_SERVICE_ROLE_KEY") ?: System.getProperty("SUPABASE_ANON_KEY") 
+                           ?: System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
         
         if (supabaseUrl.isEmpty() || supabaseKey.isEmpty()) {
             println("Database connection test failed: Missing environment variables")

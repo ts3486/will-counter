@@ -21,6 +21,16 @@ const getSupabaseHeaders = () => {
   };
 };
 
+// Helper function to get Supabase headers with service role key for write operations
+const getSupabaseServiceHeaders = () => {
+  const serviceKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || '';
+  return {
+    'apikey': serviceKey,
+    'Authorization': `Bearer ${serviceKey}`,
+    'Content-Type': 'application/json'
+  };
+};
+
 const getAuthHeaders = async () => {
   try {
     const accessToken = await SecureStore.getItemAsync('accessToken');
@@ -261,13 +271,15 @@ export const apiService = {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
+          ...getSupabaseServiceHeaders(),
           'Prefer': 'return=representation'
         },
         body: JSON.stringify({ auth0_id: auth0Id, email })
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create user: ${response.status} - ${errorText}`);
+      }
       return await response.json();
     } else {
       // Use backend API
@@ -286,21 +298,24 @@ export const apiService = {
 
   async ensureUserExists(auth0Id: string, email: string): Promise<string> {
     try {
-      // Try to get existing user first
+      // Try to get existing user first using service role for better access
       const getUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?auth0_id=eq.${auth0Id}`, {
-        headers: getSupabaseHeaders()
+        headers: getSupabaseServiceHeaders()
       });
       
       if (getUserResponse.ok) {
         const existingUsers = await getUserResponse.json();
+        console.log('Existing users found:', existingUsers);
         if (existingUsers && existingUsers.length > 0) {
           return existingUsers[0].id;
         }
+      } else {
+        console.error('Failed to query existing users:', getUserResponse.status, await getUserResponse.text());
       }
       
       // Try to find user by email as fallback
       const getUserByEmailResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${email}`, {
-        headers: getSupabaseHeaders()
+        headers: getSupabaseServiceHeaders()
       });
       
       if (getUserByEmailResponse.ok) {
@@ -310,7 +325,7 @@ export const apiService = {
           const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${existingUsersByEmail[0].id}`, {
             method: 'PATCH',
             headers: {
-              ...getSupabaseHeaders(),
+              ...getSupabaseServiceHeaders(),
               'Prefer': 'return=representation'
             },
             body: JSON.stringify({ auth0_id: auth0Id })
@@ -326,7 +341,7 @@ export const apiService = {
       const createUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: {
-          ...getSupabaseHeaders(),
+          ...getSupabaseServiceHeaders(),
           'Prefer': 'return=representation'
         },
         body: JSON.stringify({ auth0_id: auth0Id, email })
@@ -334,7 +349,24 @@ export const apiService = {
       
       if (!createUserResponse.ok) {
         const errorText = await createUserResponse.text();
-        throw new Error(`Failed to create user`);
+        console.error('Supabase create user error:', createUserResponse.status, errorText);
+        
+        // Handle duplicate key error - user already exists
+        if (createUserResponse.status === 409) {
+          console.log('User already exists, trying to fetch existing user...');
+          // Try to get the existing user one more time
+          const retryResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?auth0_id=eq.${auth0Id}`, {
+            headers: getSupabaseServiceHeaders()
+          });
+          if (retryResponse.ok) {
+            const existingUsers = await retryResponse.json();
+            if (existingUsers && existingUsers.length > 0) {
+              return existingUsers[0].id;
+            }
+          }
+        }
+        
+        throw new Error(`Failed to create user: ${createUserResponse.status} - ${errorText}`);
       }
       
       const newUser = await createUserResponse.json();
