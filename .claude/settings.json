@@ -37,5 +37,39 @@
     "**/.expo/**",
     "**/dist/**",
     "**/.gradle/**"
-  ]
+  ],
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); echo \"[$(echo \"$input\" | jq -r '.model.display_name')] Will Counter Project - $(basename \"$(echo \"$input\" | jq -r '.workspace.current_dir')\")\""
+  },
+  "agents": {
+    "directory": ".claude/agents",
+    "available": [
+      {
+        "name": "pm-agent",
+        "file": "pm-agent.md",
+        "description": "Product Manager - Clarifies goals, scope, constraints, risks, and priorities"
+      },
+      {
+        "name": "dev-agent", 
+        "file": "dev-agent.md",
+        "description": "Developer - Proposes designs, implements solutions, explains technical trade-offs"
+      },
+      {
+        "name": "cr-agent",
+        "file": "cr-agent.md", 
+        "description": "Code Reviewer - Reviews code for correctness, security, performance, and maintainability"
+      },
+      {
+        "name": "qa-agent",
+        "file": "qa-agent.md",
+        "description": "Test Engineer - Defines test strategies, creates test cases, validates implementations"
+      },
+      {
+        "name": "prompt-optimizer-agent",
+        "file": "prompt-optimizer-agent.md",
+        "description": "Prompt Optimizer - Creates optimized prompts following Claude Code best practices"
+      }
+    ]
+  }
 }
