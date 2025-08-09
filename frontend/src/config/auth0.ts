@@ -16,7 +16,7 @@ export const auth0Config = {
 
 // Validate required Auth0 configuration
 if (!auth0Config.domain || !auth0Config.clientId || !auth0Config.audience) {
-  console.warn('⚠️ Auth0 configuration incomplete. Please set EXPO_PUBLIC_AUTH0_DOMAIN, EXPO_PUBLIC_AUTH0_CLIENT_ID, and EXPO_PUBLIC_AUTH0_AUDIENCE environment variables.');
+  // Configuration warning removed for production
 }
 
 export const authEndpoints = {

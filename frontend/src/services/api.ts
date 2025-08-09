@@ -3,26 +3,20 @@ import * as SecureStore from 'expo-secure-store';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-const SUPABASE_SERVICE_KEY = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || '';
 
 // Validate required environment variables
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn('⚠️ Supabase configuration missing. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.');
-}
-
-if (!SUPABASE_SERVICE_KEY) {
-  console.warn('⚠️ Supabase service key missing. Please set EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY environment variable for admin operations.');
+  // Configuration warning removed for production
 }
 
 // Fallback to Supabase REST API if backend is not available
 const useSupabaseDirectly = true; // Set to true to bypass backend
 
-// Helper function to disable RLS for testing
-const getSupabaseHeaders = (useServiceRole: boolean = false) => {
-  const key = useServiceRole ? SUPABASE_SERVICE_KEY : SUPABASE_ANON_KEY;
+// Helper function to get Supabase headers with anon key
+const getSupabaseHeaders = () => {
   return {
-    'apikey': key,
-    'Authorization': `Bearer ${key}`,
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     'Content-Type': 'application/json'
   };
 };
@@ -49,23 +43,20 @@ export const apiService = {
         const testUserAuth0Id = 'test-user-1';
         const testUserUuid = await this.ensureUserExists(testUserAuth0Id, 'test@example.com');
         const today = new Date().toISOString().split('T')[0];
-        console.log('Fetching today count for user UUID:', testUserUuid, 'date:', today);
+        
         const response = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?user_id=eq.${testUserUuid}&date=eq.${today}`, {
           headers: {
-            ...getSupabaseHeaders(true),
+            ...getSupabaseHeaders(),
             'Prefer': 'return=representation'
           }
         });
-        console.log('Response status:', response.status);
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Response error details:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('Response data:', data);
         
         // Return the first record or create a default structure
         if (data && data.length > 0) {
@@ -83,7 +74,6 @@ export const apiService = {
           };
         }
       } catch (error) {
-        console.error('Error fetching today count:', error);
         throw error;
       }
     } else {
@@ -105,27 +95,21 @@ export const apiService = {
         // First, ensure we have a valid user
         const testUserAuth0Id = 'test-user-1';
         const testUserUuid = await this.ensureUserExists(testUserAuth0Id, 'test@example.com');
-        console.log('Incrementing count for user UUID:', testUserUuid);
       
       // Try to use the increment function first
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_will_count`, {
           method: 'POST',
-          headers: getSupabaseHeaders(true),
+          headers: getSupabaseHeaders(),
           body: JSON.stringify({ p_user_id: testUserUuid })
         });
-        console.log('Increment response status:', response.status);
         
         if (response.ok) {
           const result = await response.json();
-          console.log('Increment result:', result);
           return result;
-        } else {
-          const errorText = await response.text();
-          console.error('Increment function error:', errorText);
         }
       } catch (error) {
-        console.log('Function call failed, trying direct table operation:', error);
+        // Fallback to direct table operations
       }
       
       // Fallback: Direct table operations
@@ -133,7 +117,7 @@ export const apiService = {
       
       // First, get current count
       const getResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?user_id=eq.${testUserUuid}&date=eq.${today}`, {
-        headers: getSupabaseHeaders(true)
+        headers: getSupabaseHeaders()
       });
       const currentData = await getResponse.json();
       const currentRecord = currentData[0];
@@ -144,7 +128,7 @@ export const apiService = {
         const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?id=eq.${currentRecord.id}`, {
           method: 'PATCH',
           headers: {
-            ...getSupabaseHeaders(true),
+            ...getSupabaseHeaders(),
             'Prefer': 'return=representation'
           },
           body: JSON.stringify({ 
@@ -159,7 +143,7 @@ export const apiService = {
         const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts`, {
           method: 'POST',
           headers: {
-            ...getSupabaseHeaders(true),
+            ...getSupabaseHeaders(),
             'Prefer': 'return=representation'
           },
           body: JSON.stringify({
@@ -171,13 +155,10 @@ export const apiService = {
             updated_at: new Date().toISOString()
           })
         });
-        console.log('Create response status:', createResponse.status);
         const newData = await createResponse.json();
-        console.log('Create response data:', newData);
         return newData[0] || newData;
       }
       } catch (error) {
-        console.error('Error incrementing count:', error);
         throw error;
       }
     } else {
@@ -201,11 +182,10 @@ export const apiService = {
         const testUserAuth0Id = 'test-user-1';
         const testUserUuid = await this.ensureUserExists(testUserAuth0Id, 'test@example.com');
         const today = new Date().toISOString().split('T')[0];
-        console.log('Resetting count for user UUID:', testUserUuid, 'date:', today);
         
         // Check if record exists for today
         const getResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?user_id=eq.${testUserUuid}&date=eq.${today}`, {
-          headers: getSupabaseHeaders(true)
+          headers: getSupabaseHeaders()
         });
         const currentData = await getResponse.json();
         const currentRecord = currentData[0];
@@ -215,7 +195,7 @@ export const apiService = {
           const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts?id=eq.${currentRecord.id}`, {
             method: 'PATCH',
             headers: {
-              ...getSupabaseHeaders(true),
+              ...getSupabaseHeaders(),
               'Prefer': 'return=representation'
             },
             body: JSON.stringify({ 
@@ -237,7 +217,7 @@ export const apiService = {
           const createResponse = await fetch(`${SUPABASE_URL}/rest/v1/will_counts`, {
             method: 'POST',
             headers: {
-              ...getSupabaseHeaders(true),
+              ...getSupabaseHeaders(),
               'Prefer': 'return=representation'
             },
             body: JSON.stringify({
@@ -259,7 +239,6 @@ export const apiService = {
           return newData[0] || newData;
         }
       } catch (error) {
-        console.error('Error resetting count:', error);
         throw error;
       }
     } else {
@@ -307,58 +286,47 @@ export const apiService = {
 
   async ensureUserExists(auth0Id: string, email: string): Promise<string> {
     try {
-      // Try to get existing user first (use service role to bypass RLS)
-      console.log('Looking for existing user with auth0_id:', auth0Id);
+      // Try to get existing user first
       const getUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?auth0_id=eq.${auth0Id}`, {
-        headers: getSupabaseHeaders(true)
+        headers: getSupabaseHeaders()
       });
       
-      if (!getUserResponse.ok) {
-        const errorText = await getUserResponse.text();
-        console.error('Error fetching user:', errorText);
-      } else {
+      if (getUserResponse.ok) {
         const existingUsers = await getUserResponse.json();
-        console.log('User lookup response:', existingUsers);
         if (existingUsers && existingUsers.length > 0) {
-          console.log('Found existing user:', existingUsers[0].id);
           return existingUsers[0].id;
         }
       }
       
       // Try to find user by email as fallback
-      console.log('User not found by auth0_id, trying email lookup for:', email);
       const getUserByEmailResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${email}`, {
-        headers: getSupabaseHeaders(true)
+        headers: getSupabaseHeaders()
       });
       
       if (getUserByEmailResponse.ok) {
         const existingUsersByEmail = await getUserByEmailResponse.json();
-        console.log('Email lookup response:', existingUsersByEmail);
         if (existingUsersByEmail && existingUsersByEmail.length > 0) {
-          console.log('Found existing user by email:', existingUsersByEmail[0].id);
           // Update the auth0_id for this user
           const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${existingUsersByEmail[0].id}`, {
             method: 'PATCH',
             headers: {
-              ...getSupabaseHeaders(true),
+              ...getSupabaseHeaders(),
               'Prefer': 'return=representation'
             },
             body: JSON.stringify({ auth0_id: auth0Id })
           });
           
           if (updateResponse.ok) {
-            console.log('Updated user with auth0_id');
             return existingUsersByEmail[0].id;
           }
         }
       }
       
-      // Create new user if doesn't exist (use service role to bypass RLS)
-      console.log('Creating new user for auth0_id:', auth0Id, 'email:', email);
+      // Create new user if doesn't exist
       const createUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: {
-          ...getSupabaseHeaders(true),
+          ...getSupabaseHeaders(),
           'Prefer': 'return=representation'
         },
         body: JSON.stringify({ auth0_id: auth0Id, email })
@@ -366,23 +334,18 @@ export const apiService = {
       
       if (!createUserResponse.ok) {
         const errorText = await createUserResponse.text();
-        console.error('Create user error details:', errorText);
-        throw new Error(`Failed to create user: ${errorText}`);
+        throw new Error(`Failed to create user`);
       }
       
       const newUser = await createUserResponse.json();
-      console.log('Create user response:', newUser);
       if (Array.isArray(newUser) && newUser.length > 0) {
-        console.log('Created new user:', newUser[0].id);
         return newUser[0].id;
       } else if (newUser.id) {
-        console.log('Created new user:', newUser.id);
         return newUser.id;
       } else {
-        throw new Error('Failed to create user: ' + JSON.stringify(newUser));
+        throw new Error('Failed to create user');
       }
     } catch (error) {
-      console.error('Error ensuring user exists:', error);
       throw error;
     }
   }

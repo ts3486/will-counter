@@ -6,7 +6,7 @@ const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_
 
 // Validate configuration
 if (supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
-  console.warn('⚠️ Supabase configuration not set. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.')
+  // Configuration warning removed for production
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
