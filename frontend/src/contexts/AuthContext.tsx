@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch(setUser(parsedUser));
       }
     } catch (error) {
-      console.log('No valid credentials found');
+      // No valid credentials found
       setIsAuthenticated(false);
       setUserState(null);
       dispatch(clearUser());
@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     } catch (error) {
-      console.error('Auth response handling failed:', error);
+      // Auth response handling failed
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         showInRecents: true,
       });
     } catch (error) {
-      console.error('Login failed:', error);
+      // Login failed
       setLoading(false);
       throw error;
     }
@@ -150,12 +150,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserState(null);
       dispatch(clearUser());
       
-      console.log('Logout completed successfully');
+      // Logout completed successfully
       
       // Show success message
       Alert.alert('Success', 'You have been logged out successfully.');
     } catch (error) {
-      console.error('Logout failed:', error);
+      // Logout failed
       // Even if cleanup fails partially, ensure auth state is cleared
       setIsAuthenticated(false);
       setUserState(null);

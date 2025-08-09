@@ -120,7 +120,7 @@ export const createUserProfile = createAsyncThunk(
   async (userData: { auth0Id: string; email: string }, { rejectWithValue }) => {
     try {
       // Mock API call - in real app this would create a user profile
-      console.log('Creating user profile:', userData);
+      // Creating user profile
       return userData;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to create user profile');
@@ -150,7 +150,7 @@ export const updateUserPreferences = createAsyncThunk(
   async (params: { auth0Id: string; preferences: UserPreferences }, { rejectWithValue }) => {
     try {
       // Mock API call - in real app this would update user preferences
-      console.log('Updating user preferences:', params);
+      // Updating user preferences
       return params.preferences;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to update preferences');
