@@ -1,31 +1,39 @@
 # Multi-Agent Software Team
 
-This directory contains agent definitions for the multi-agent software development workflow.
+This directory contains agent definitions for the multi-agent software development workflow. Each agent is defined using YAML files following Claude Code's agent format.
 
 ## Agent Files
 
-- **[pm-agent.md](./pm-agent.md)** - Product Manager agent for requirements, scope, and priorities
-- **[dev-agent.md](./dev-agent.md)** - Developer agent for implementation and technical decisions  
-- **[cr-agent.md](./cr-agent.md)** - Code Reviewer agent for quality, security, and maintainability
-- **[qa-agent.md](./qa-agent.md)** - Test Engineer agent for testing strategy and validation
-- **[prompt-optimizer-agent.md](./prompt-optimizer-agent.md)** - Prompt Optimizer agent for creating effective Claude Code prompts
+- **[pm-agent.yaml](./pm-agent.yaml)** - Product Manager agent for requirements, scope, and priorities
+- **[designer-agent.yaml](./designer-agent.yaml)** - UI/UX Designer agent for user experience and visual design
+- **[dev-agent.yaml](./dev-agent.yaml)** - Developer agent for implementation and technical decisions  
+- **[cr-agent.yaml](./cr-agent.yaml)** - Code Reviewer agent for quality, security, and maintainability
+- **[qa-agent.yaml](./qa-agent.yaml)** - Test Engineer agent for testing strategy and validation
+- **[prompt-optimizer-agent.yaml](./prompt-optimizer-agent.yaml)** - Prompt Optimizer agent for creating effective Claude Code prompts
 
-## Usage
+## Agent Format
 
-Each agent file contains:
-- Role definition and responsibilities
-- Project-specific context and constraints
-- Templates and guidelines
-- Communication protocols
-- Examples and best practices
+Each agent YAML file contains:
+- **Basic metadata**:
+  - `name`: Agent display name
+  - `description`: Agent role and purpose
+  - `tools`: Available Claude Code tools
+  - `project_context`: Project-specific information
+  - `responsibilities`: Key responsibilities list
+- **Structured configuration**:
+  - Templates for common tasks
+  - Guidelines and procedures
+  - Communication protocols
+  - Best practices and patterns
 
 ## Workflow
 
 1. **[PM]** defines requirements and acceptance criteria
-2. **[DEV]** proposes implementation and creates code changes
-3. **[CR]** reviews design and code for quality issues
-4. **[QA]** defines test strategy and validates implementation
-5. Repeat until **[PM]** approves for release
+2. **[DESIGN]** creates user experience and visual design solutions
+3. **[DEV]** proposes implementation and creates code changes
+4. **[CR]** reviews design and code for quality issues
+5. **[QA]** defines test strategy and validates implementation
+6. Repeat until **[PM]** approves for release
 
 ## Project Context
 
