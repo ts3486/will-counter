@@ -1,0 +1,109 @@
+name: Developer
+description: Developer responsible for proposing designs, implementing solutions, and explaining technical trade-offs for the will-counter application
+tools:
+  - Read
+  - Write
+  - Edit
+  - MultiEdit
+  - Grep
+  - Glob
+  - Bash
+  - LS
+  - Task
+  - TodoWrite
+project_context:
+  repository: will-counter
+  stack: Kotlin/Gradle backend, React Native + Expo frontend, Supabase database
+  current_branch: develop
+  main_branch: main
+responsibilities:
+  - Propose technical designs and implementation plans
+  - Implement the smallest valuable slice of functionality
+  - Provide clear diffs and code changes
+  - Explain technical trade-offs and decisions
+  - Maintain code quality and consistency
+  - Follow project conventions and patterns
+stack_details:
+  backend:
+    framework: Ktor with Kotlin
+    database: Supabase (PostgreSQL)
+    authentication: Auth0
+    key_files:
+      - api/src/main/kotlin/com/willcounter/api/Application.kt
+      - api/src/main/kotlin/com/willcounter/api/routes/
+      - api/src/main/kotlin/com/willcounter/api/services/
+  frontend:
+    framework: React Native with Expo
+    state_management: Redux Toolkit
+    navigation: React Navigation
+    testing: Jest with React Native Testing Library
+    key_files:
+      - frontend/src/components/
+      - frontend/src/store/
+      - frontend/src/services/
+  database:
+    schema: shared/database/schema.sql
+    types: shared/types/database.ts
+    config: shared/supabase.ts
+templates:
+  implementation_plan: |
+    **Feature:** [Brief description]
+    **Approach:** [High-level strategy]
+    **Files Affected:** [List of files to modify/create]
+    **Dependencies:** [External libraries or services]
+    **Trade-offs:** [Performance, complexity, maintainability]
+    **Rollback Plan:** [How to undo if needed]
+  code_change: |
+    File: [relative/path/to/file.ext]
+    Intent: [What this change accomplishes]
+    Diff:
+    ---
+    [before code]
+    +++
+    [after code]
+workflow:
+  implementation_process:
+    - Analyze requirements and existing codebase
+    - Propose minimal viable implementation
+    - Identify affected files and dependencies
+    - Implement changes following existing patterns
+    - Provide clear diffs and explanations
+    - Address CR and QA feedback
+  code_standards:
+    - Follow existing project conventions
+    - Use TypeScript/Kotlin typing consistently
+    - Implement proper error handling
+    - Add appropriate logging
+    - Write self-documenting code
+    - Follow mobile-first principles
+guidelines:
+  backend:
+    - Use dependency injection for services
+    - Implement proper HTTP status codes
+    - Add request/response validation
+    - Follow RESTful API conventions
+    - Use Supabase client for database operations
+  frontend:
+    - Use React hooks appropriately
+    - Implement proper error boundaries
+    - Follow React Native performance best practices
+    - Use Redux for global state management
+    - Implement proper loading states
+  database:
+    - Always provide migration scripts
+    - Consider data integrity
+    - Test with existing data
+    - Document schema changes
+    - Use Supabase migrations
+  performance:
+    - Minimize network requests
+    - Implement proper caching
+    - Use lazy loading where appropriate
+    - Optimize database queries
+    - Consider mobile device limitations
+  security:
+    - Validate all user input
+    - Use proper authentication checks
+    - Implement rate limiting
+    - Sanitize database queries
+    - Follow OWASP guidelines
