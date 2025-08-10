@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import { MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -30,7 +31,7 @@ const SettingsScreen: React.FC = () => {
   const dispatch = useDispatch();
   const todayCount = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
-  const { logout, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   
   const [preferences, setPreferences] = useState<AppPreferences>({
     soundEnabled: true,
@@ -180,6 +181,43 @@ const SettingsScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const renderUserInfoItem = (
+    title: string,
+    value: string,
+    icon: string | React.ReactNode,
+    isLoading: boolean = false
+  ) => (
+    <View style={styles.settingItem}>
+      <View style={styles.settingLeft}>
+        {typeof icon === 'string' ? (
+          <Text style={{ fontSize: 24, color: "#3B82F6" }}>{icon}</Text>
+        ) : (
+          icon
+        )}
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>{title}</Text>
+          <Text style={styles.settingSubtitle}>
+            {isLoading ? 'Loading...' : value || 'Not available'}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Not available';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Not available';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -187,6 +225,38 @@ const SettingsScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Customize your experience</Text>
+        </View>
+
+        {/* User Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>User</Text>
+          
+          {/* Profile Picture and Name */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <View style={styles.profileImageContainer}>
+                {user?.picture ? (
+                  <Image 
+                    source={{ uri: user.picture }} 
+                    style={styles.profileImage}
+                    onError={() => {}}
+                  />
+                ) : (
+                  <View style={styles.profilePlaceholder}>
+                    <Text style={styles.profilePlaceholderText}>👤</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>
+                  {authLoading ? 'Loading...' : (user?.name || user?.email?.split('@')[0] || 'User')}
+                </Text>
+                <Text style={styles.settingSubtitle}>
+                  {authLoading ? 'Loading...' : (user?.email || 'No email available')}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
 
         {/* App Preferences */}
@@ -616,6 +686,32 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Profile image styles
+  profileImageContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  profilePlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+  },
+  profilePlaceholderText: {
+    fontSize: 20,
+    color: '#64748B',
   },
 });
 
