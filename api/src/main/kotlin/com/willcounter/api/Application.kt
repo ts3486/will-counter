@@ -3,8 +3,10 @@ package com.willcounter.api
 import com.willcounter.api.config.DatabaseConfig
 import com.willcounter.api.config.configureAuthentication
 import com.willcounter.api.services.DatabaseService
+import com.willcounter.api.services.SupabaseClient
 import com.willcounter.api.routes.userRoutes
 import com.willcounter.api.routes.willCountRoutes
+import com.willcounter.api.routes.secureWillCountRoutes
 import com.willcounter.api.dto.HealthResponse
 import com.willcounter.api.dto.ApiResponse
 import io.ktor.server.application.*
@@ -21,12 +23,9 @@ import java.time.LocalDateTime
 
 fun main() {
     // Initialize database
-    println("Initializing database...")
     try {
         DatabaseConfig.init()
-        println("Database initialized successfully")
     } catch (e: Exception) {
-        println("Failed to initialize database: ${e.message}")
         return
     }
     
@@ -59,6 +58,7 @@ fun Application.module() {
     }
     
     val databaseService = DatabaseService()
+    val supabaseClient = SupabaseClient()
     
     routing {
         get("/") {
@@ -70,13 +70,25 @@ fun Application.module() {
         }
         
         get("/health") {
-            call.respondText("API is running and healthy", ContentType.Text.Plain)
+            try {
+                val supabaseHealthy = supabaseClient.healthCheck()
+                val dbHealthy = databaseService.testConnection()
+                
+                if (supabaseHealthy && dbHealthy) {
+                    call.respondText("API is running and healthy - All services connected", ContentType.Text.Plain)
+                } else {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable - Database connectivity issues")
+                }
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable: ${e.message}")
+            }
         }
         
-        // Add user routes
-        userRoutes(databaseService)
+        // Secure Supabase-based routes (recommended)
+        secureWillCountRoutes(supabaseClient)
         
-        // Add will count routes
+        // Legacy routes for backward compatibility (can be removed after migration)
+        userRoutes(databaseService)
         willCountRoutes(databaseService)
     }
 }

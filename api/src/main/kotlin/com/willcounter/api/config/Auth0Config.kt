@@ -7,14 +7,10 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import java.util.concurrent.TimeUnit
 
 object Auth0Config {
-    private val domain = System.getenv("AUTH0_DOMAIN") ?: ""
-    private val audience = System.getenv("AUTH0_AUDIENCE") ?: ""
+    private val domain = System.getProperty("AUTH0_DOMAIN") ?: System.getenv("AUTH0_DOMAIN") ?: ""
+    private val audience = System.getProperty("AUTH0_AUDIENCE") ?: System.getenv("AUTH0_AUDIENCE") ?: ""
     
-    init {
-        if (domain.isEmpty() || audience.isEmpty()) {
-            println("⚠️ Auth0 configuration incomplete. Please set AUTH0_DOMAIN and AUTH0_AUDIENCE environment variables.")
-        }
-    }
+    // Configuration validated at runtime
     
     private val jwkProvider = JwkProviderBuilder(domain)
         .cached(10, 24, TimeUnit.HOURS)
@@ -32,7 +28,6 @@ object Auth0Config {
             
             verifier.verify(token)
         } catch (e: Exception) {
-            println("Token verification failed: ${e.message}")
             null
         }
     }
