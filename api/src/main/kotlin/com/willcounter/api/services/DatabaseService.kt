@@ -12,10 +12,100 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlinx.coroutines.runBlocking
 
 class DatabaseService {
+    private val supabaseService = SupabaseService()
     
-    fun createUser(request: CreateUserRequest): UserResponse = transaction {
+    /**
+     * Ensure user exists using Supabase service - main user management method
+     */
+    suspend fun ensureUserExists(auth0Id: String, email: String): UserResponse? {
+        val supabaseUser = supabaseService.ensureUserExists(auth0Id, email)
+        return supabaseUser?.let { user ->
+            UserResponse(
+                id = user.id,
+                auth0Id = user.auth0_id,
+                email = user.email,
+                createdAt = user.created_at,
+                lastLogin = user.last_login,
+                preferences = user.preferences.toString()
+            )
+        }
+    }
+    
+    /**
+     * Get today's count using Supabase RPC
+     */
+    suspend fun getTodayCountSupabase(userId: String): WillCountResponse? {
+        val supabaseCount = supabaseService.getTodayCount(userId)
+        return supabaseCount?.let { count ->
+            WillCountResponse(
+                id = count.id,
+                userId = count.user_id,
+                date = count.date,
+                count = count.count,
+                timestamps = count.timestamps,
+                createdAt = count.created_at,
+                updatedAt = count.updated_at
+            )
+        }
+    }
+    
+    /**
+     * Increment count using Supabase RPC
+     */
+    suspend fun incrementCountSupabase(userId: String): WillCountResponse? {
+        val supabaseCount = supabaseService.incrementWillCount(userId)
+        return supabaseCount?.let { count ->
+            WillCountResponse(
+                id = count.id,
+                userId = count.user_id,
+                date = count.date,
+                count = count.count,
+                timestamps = count.timestamps,
+                createdAt = count.created_at,
+                updatedAt = count.updated_at
+            )
+        }
+    }
+    
+    /**
+     * Reset today's count using Supabase
+     */
+    suspend fun resetTodayCountSupabase(userId: String): WillCountResponse? {
+        val supabaseCount = supabaseService.resetTodayCount(userId)
+        return supabaseCount?.let { count ->
+            WillCountResponse(
+                id = count.id,
+                userId = count.user_id,
+                date = count.date,
+                count = count.count,
+                timestamps = count.timestamps,
+                createdAt = count.created_at,
+                updatedAt = count.updated_at
+            )
+        }
+    }
+    
+    /**
+     * Get user by Auth0 ID using Supabase
+     */
+    suspend fun getUserByAuth0IdSupabase(auth0Id: String): UserResponse? {
+        val supabaseUser = supabaseService.getUserByAuth0Id(auth0Id)
+        return supabaseUser?.let { user ->
+            UserResponse(
+                id = user.id,
+                auth0Id = user.auth0_id,
+                email = user.email,
+                createdAt = user.created_at,
+                lastLogin = user.last_login,
+                preferences = user.preferences.toString()
+            )
+        }
+    }
+    
+    fun createUser(request: com.willcounter.api.dto.CreateUserRequest): UserResponse = transaction {
         val user = User.new {
             auth0Id = request.auth0Id
             email = request.email

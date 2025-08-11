@@ -10,7 +10,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 // Fallback to Supabase REST API if backend is not available
-const useSupabaseDirectly = true; // Set to true to bypass backend
+const useSupabaseDirectly = false; // Set to false to use secure backend
 
 // Security configuration
 const useApplicationLevelSecurity = true;
@@ -96,6 +96,19 @@ const getAuthHeaders = async () => {
 };
 
 export const apiService = {
+  async ensureUser() {
+    // Use backend API to ensure user exists
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/api/users/ensure`, {
+      method: 'POST',
+      headers,
+    });
+    if (!response.ok) throw new Error('Failed to ensure user');
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+    return result.data;
+  },
+
   async getTodayCount(_userId?: string) {
     if (useSupabaseDirectly) {
       try {

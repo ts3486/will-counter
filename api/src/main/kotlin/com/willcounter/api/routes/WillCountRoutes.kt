@@ -25,8 +25,8 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                         return@get
                     }
                     
-                    // Get user by auth0_id first
-                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    // Get user by auth0_id using Supabase
+                    val user = databaseService.getUserByAuth0IdSupabase(auth0Id)
                     if (user == null) {
                         call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
                             success = false,
@@ -35,7 +35,7 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                         return@get
                     }
                     
-                    val willCount = databaseService.getTodayCount(user.id)
+                    val willCount = databaseService.getTodayCountSupabase(user.id)
                     if (willCount != null) {
                         call.respond(HttpStatusCode.OK, ApiResponse(
                             success = true,
@@ -66,8 +66,8 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                         return@post
                     }
                     
-                    // Get user by auth0_id first
-                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    // Get user by auth0_id using Supabase
+                    val user = databaseService.getUserByAuth0IdSupabase(auth0Id)
                     if (user == null) {
                         call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
                             success = false,
@@ -76,7 +76,7 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                         return@post
                     }
                     
-                    val willCount = databaseService.incrementCount(user.id)
+                    val willCount = databaseService.incrementCountSupabase(user.id)
                     if (willCount != null) {
                         call.respond(HttpStatusCode.OK, ApiResponse(
                             success = true,
@@ -93,6 +93,48 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                     call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                         success = false,
                         error = "Failed to increment count: ${e.message}"
+                    ))
+                }
+            }
+            
+            post("/reset") {
+                try {
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
+                            success = false,
+                            error = "Authentication required"
+                        ))
+                        return@post
+                    }
+                    
+                    // Get user by auth0_id using Supabase
+                    val user = databaseService.getUserByAuth0IdSupabase(auth0Id)
+                    if (user == null) {
+                        call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
+                            success = false,
+                            error = "User not found"
+                        ))
+                        return@post
+                    }
+                    
+                    val willCount = databaseService.resetTodayCountSupabase(user.id)
+                    if (willCount != null) {
+                        call.respond(HttpStatusCode.OK, ApiResponse(
+                            success = true,
+                            data = willCount,
+                            message = "Count reset successfully"
+                        ))
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                            success = false,
+                            error = "Failed to reset count"
+                        ))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                        success = false,
+                        error = "Failed to reset count: ${e.message}"
                     ))
                 }
             }

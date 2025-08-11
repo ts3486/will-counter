@@ -14,6 +14,43 @@ fun Route.userRoutes(databaseService: DatabaseService) {
     route("/api/users") {
         
         authenticate("auth0") {
+            post("/ensure") {
+                try {
+                    // Get authenticated user info from JWT
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
+                            success = false,
+                            error = "Authentication required"
+                        ))
+                        return@post
+                    }
+
+                    // Extract email from JWT if available
+                    // In a real implementation, you'd get this from the JWT claims
+                    val email = call.request.headers["X-User-Email"] ?: "$auth0Id@placeholder.com"
+                    
+                    val user = databaseService.ensureUserExists(auth0Id, email)
+                    if (user != null) {
+                        call.respond(HttpStatusCode.OK, ApiResponse(
+                            success = true,
+                            data = mapOf("user_id" to user.id),
+                            message = "User ensured successfully"
+                        ))
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                            success = false,
+                            error = "Failed to ensure user exists"
+                        ))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                        success = false,
+                        error = "Failed to ensure user exists: ${e.message}"
+                    ))
+                }
+            }
+            
             post {
                 try {
                     // Get authenticated user info
