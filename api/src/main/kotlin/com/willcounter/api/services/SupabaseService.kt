@@ -10,8 +10,6 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.jsonObject
 import java.util.*
 
 @Serializable
@@ -41,11 +39,6 @@ data class SupabaseCreateUserRequest(
     val email: String
 )
 
-@Serializable
-data class RPCIncrementRequest(
-    val p_user_id: String
-)
-
 /**
  * Secure Supabase REST client for server-side operations
  * Uses service role key for bypassing RLS when necessary
@@ -63,7 +56,11 @@ class SupabaseService {
             throw IllegalStateException("SUPABASE_SERVICE_ROLE_KEY environment variable is required")
         }
         
-        // Security: Never log the service role key
+        // Security: Never log the service role key, validate it starts correctly  
+        if (!serviceRoleKey.startsWith("eyJ")) {
+            println("⚠️ Warning: Service role key may not be valid JWT format")
+        }
+        
         println("✅ Supabase service initialized with URL: ${maskUrl(supabaseUrl)}")
     }
     
@@ -77,64 +74,77 @@ class SupabaseService {
     }
     
     /**
-     * Get user by Auth0 ID - uses service role for reliable lookup
+     * Secure request wrapper that ensures sensitive data is never logged
      */
-    suspend fun getUserByAuth0Id(auth0Id: String): SupabaseUser? {
+    private suspend inline fun <reified T> makeSecureRequest(
+        url: String,
+        method: HttpMethod = HttpMethod.Get,
+        body: Any? = null,
+        additionalParams: Map<String, String> = emptyMap()
+    ): T? {
         return try {
-            val response = httpClient.get("$supabaseUrl/rest/v1/users") {
+            val response = httpClient.request(url) {
+                this.method = method
                 headers {
                     append("apikey", serviceRoleKey)
                     append("Authorization", "Bearer $serviceRoleKey")
                     append("Content-Type", "application/json")
+                    if (method in listOf(HttpMethod.Post, HttpMethod.Patch)) {
+                        append("Prefer", "return=representation")
+                    }
                 }
-                parameter("auth0_id", "eq.$auth0Id")
-                parameter("select", "*")
+                
+                additionalParams.forEach { (key, value) ->
+                    parameter(key, value)
+                }
+                
+                if (body != null) {
+                    setBody(body)
+                }
             }
             
             if (response.status.isSuccess()) {
-                val users: List<SupabaseUser> = response.body()
-                users.firstOrNull()
+                response.body<T>()
             } else {
-                println("⚠️ Failed to get user by auth0_id: ${response.status}")
+                // Log error without exposing request details
+                println("⚠️ Supabase request failed: ${response.status} for ${maskUrl(url)}")
                 null
             }
         } catch (e: Exception) {
-            println("❌ Error getting user by auth0_id: ${e.message}")
+            println("❌ Supabase request error: ${e.message?.take(100)} for ${maskUrl(url)}")
             null
         }
+    }
+    
+    /**
+     * Get user by Auth0 ID - uses service role for reliable lookup
+     */
+    suspend fun getUserByAuth0Id(auth0Id: String): SupabaseUser? {
+        val users: List<SupabaseUser>? = makeSecureRequest<List<SupabaseUser>>(
+            "$supabaseUrl/rest/v1/users",
+            additionalParams = mapOf(
+                "auth0_id" to "eq.$auth0Id",
+                "select" to "*"
+            )
+        )
+        return users?.firstOrNull()
     }
     
     /**
      * Create a new user - uses service role for creation
      */
     suspend fun createUser(auth0Id: String, email: String): SupabaseUser? {
-        return try {
-            val requestBody = SupabaseCreateUserRequest(
-                auth0_id = auth0Id,
-                email = email
-            )
-            
-            val response = httpClient.post("$supabaseUrl/rest/v1/users") {
-                headers {
-                    append("apikey", serviceRoleKey)
-                    append("Authorization", "Bearer $serviceRoleKey")
-                    append("Content-Type", "application/json")
-                    append("Prefer", "return=representation")
-                }
-                setBody(requestBody)
-            }
-            
-            if (response.status.isSuccess()) {
-                val users: List<SupabaseUser> = response.body()
-                users.firstOrNull()
-            } else {
-                println("⚠️ Failed to create user: ${response.status}")
-                null
-            }
-        } catch (e: Exception) {
-            println("❌ Error creating user: ${e.message}")
-            null
-        }
+        val requestBody = SupabaseCreateUserRequest(
+            auth0_id = auth0Id,
+            email = email
+        )
+        
+        val users: List<SupabaseUser>? = makeSecureRequest<List<SupabaseUser>>(
+            "$supabaseUrl/rest/v1/users",
+            HttpMethod.Post,
+            requestBody
+        )
+        return users?.firstOrNull()
     }
     
     /**
@@ -156,118 +166,59 @@ class SupabaseService {
      * Get today's will count using RPC function
      */
     suspend fun getTodayCount(userId: String): SupabaseWillCount? {
-        return try {
-            val response = httpClient.post("$supabaseUrl/rest/v1/rpc/get_or_create_today_count") {
-                headers {
-                    append("apikey", serviceRoleKey)
-                    append("Authorization", "Bearer $serviceRoleKey")
-                    append("Content-Type", "application/json")
-                }
-                setBody(mapOf("p_user_id" to userId))
-            }
-            
-            if (response.status.isSuccess()) {
-                response.body<SupabaseWillCount>()
-            } else {
-                println("⚠️ Failed to get today count: ${response.status}")
-                null
-            }
-        } catch (e: Exception) {
-            println("❌ Error getting today count: ${e.message}")
-            null
-        }
+        return makeSecureRequest<SupabaseWillCount>(
+            "$supabaseUrl/rest/v1/rpc/get_or_create_today_count",
+            HttpMethod.Post,
+            mapOf("p_user_id" to userId)
+        )
     }
     
     /**
      * Increment will count using RPC function
      */
     suspend fun incrementWillCount(userId: String): SupabaseWillCount? {
-        return try {
-            val response = httpClient.post("$supabaseUrl/rest/v1/rpc/increment_will_count") {
-                headers {
-                    append("apikey", serviceRoleKey)
-                    append("Authorization", "Bearer $serviceRoleKey")
-                    append("Content-Type", "application/json")
-                }
-                setBody(mapOf("p_user_id" to userId))
-            }
-            
-            if (response.status.isSuccess()) {
-                response.body<SupabaseWillCount>()
-            } else {
-                println("⚠️ Failed to increment count: ${response.status}")
-                null
-            }
-        } catch (e: Exception) {
-            println("❌ Error incrementing count: ${e.message}")
-            null
-        }
+        return makeSecureRequest<SupabaseWillCount>(
+            "$supabaseUrl/rest/v1/rpc/increment_will_count",
+            HttpMethod.Post,
+            mapOf("p_user_id" to userId)
+        )
     }
     
     /**
      * Reset today's will count to zero
      */
     suspend fun resetTodayCount(userId: String): SupabaseWillCount? {
-        return try {
-            // First get today's record
-            val today = java.time.LocalDate.now().toString()
-            
-            val response = httpClient.patch("$supabaseUrl/rest/v1/will_counts") {
-                headers {
-                    append("apikey", serviceRoleKey)
-                    append("Authorization", "Bearer $serviceRoleKey")
-                    append("Content-Type", "application/json")
-                    append("Prefer", "return=representation")
-                }
-                parameter("user_id", "eq.$userId")
-                parameter("date", "eq.$today")
-                setBody(mapOf(
-                    "count" to 0,
-                    "timestamps" to emptyList<String>(),
-                    "updated_at" to java.time.LocalDateTime.now().toString()
-                ))
-            }
-            
-            if (response.status.isSuccess()) {
-                val results: List<SupabaseWillCount> = response.body()
-                results.firstOrNull() ?: getTodayCount(userId) // Fallback to get/create
-            } else {
-                println("⚠️ Failed to reset count: ${response.status}")
-                null
-            }
-        } catch (e: Exception) {
-            println("❌ Error resetting count: ${e.message}")
-            null
-        }
+        val today = java.time.LocalDate.now().toString()
+        
+        val results: List<SupabaseWillCount>? = makeSecureRequest<List<SupabaseWillCount>>(
+            "$supabaseUrl/rest/v1/will_counts",
+            HttpMethod.Patch,
+            mapOf(
+                "count" to 0,
+                "timestamps" to emptyList<String>(),
+                "updated_at" to java.time.LocalDateTime.now().toString()
+            ),
+            mapOf(
+                "user_id" to "eq.$userId",
+                "date" to "eq.$today"
+            )
+        )
+        
+        return results?.firstOrNull() ?: getTodayCount(userId)
     }
     
     /**
      * Get user statistics using RPC function
      */
     suspend fun getUserStatistics(userId: String, days: Int = 30): List<Map<String, Any>>? {
-        return try {
-            val response = httpClient.post("$supabaseUrl/rest/v1/rpc/get_user_statistics") {
-                headers {
-                    append("apikey", serviceRoleKey)
-                    append("Authorization", "Bearer $serviceRoleKey")
-                    append("Content-Type", "application/json")
-                }
-                setBody(mapOf(
-                    "p_user_id" to userId,
-                    "p_days" to days
-                ))
-            }
-            
-            if (response.status.isSuccess()) {
-                response.body<List<Map<String, Any>>>()
-            } else {
-                println("⚠️ Failed to get statistics: ${response.status}")
-                null
-            }
-        } catch (e: Exception) {
-            println("❌ Error getting statistics: ${e.message}")
-            null
-        }
+        return makeSecureRequest<List<Map<String, Any>>>(
+            "$supabaseUrl/rest/v1/rpc/get_user_statistics",
+            HttpMethod.Post,
+            mapOf(
+                "p_user_id" to userId,
+                "p_days" to days
+            )
+        )
     }
     
     /**
