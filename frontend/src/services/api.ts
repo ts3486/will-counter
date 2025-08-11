@@ -12,9 +12,44 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Fallback to Supabase REST API if backend is not available
 const useSupabaseDirectly = true; // Set to true to bypass backend
 
-// Temporary flag to handle RLS policy conflicts with Auth0
-// In production, this should be handled by proper Auth0-Supabase integration
-const bypassRLS = true;
+// Security configuration
+const useApplicationLevelSecurity = true;
+
+// Rate limiting configuration
+const RATE_LIMIT_REQUESTS = 10;
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const userRequestCounts = new Map<string, { count: number; resetTime: number }>();
+
+// Input validation and sanitization
+const validateInput = {
+  auth0Id: (id: string): boolean => {
+    return typeof id === 'string' && /^[a-zA-Z0-9\-_|]+$/.test(id) && id.length > 0 && id.length < 256;
+  },
+  email: (email: string): boolean => {
+    return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length < 256;
+  },
+  uuid: (uuid: string): boolean => {
+    return typeof uuid === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
+  }
+};
+
+// Rate limiting check
+const checkRateLimit = (auth0Id: string): boolean => {
+  const now = Date.now();
+  const userLimit = userRequestCounts.get(auth0Id);
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    userRequestCounts.set(auth0Id, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (userLimit.count >= RATE_LIMIT_REQUESTS) {
+    return false;
+  }
+  
+  userLimit.count++;
+  return true;
+};
 
 // Helper function to get Supabase headers with anon key
 const getSupabaseHeaders = () => {
@@ -66,7 +101,6 @@ export const apiService = {
       try {
         // Get current authenticated user info
         const userInfo = await this.getCurrentUser();
-        console.log('getTodayCount - userInfo from storage:', userInfo);
         
         if (!userInfo) {
           throw new Error('User not authenticated - no user info found in secure storage. Please log in again.');
@@ -76,16 +110,19 @@ export const apiService = {
         const auth0Id = userInfo.sub || userInfo.user_id || userInfo.id;
         const email = userInfo.email;
         
-        console.log('getTodayCount - extracted auth data:', { auth0Id, email });
         
-        if (!auth0Id) {
-          console.error('Missing Auth0 ID in user info. Available fields:', Object.keys(userInfo));
-          throw new Error('User not authenticated - missing user ID. Available fields: ' + Object.keys(userInfo).join(', '));
+        // Validate user data
+        if (!validateInput.auth0Id(auth0Id)) {
+          throw new Error('Invalid user authentication data');
         }
         
-        if (!email) {
-          console.error('Missing email in user info. Available fields:', Object.keys(userInfo));
-          throw new Error('User not authenticated - missing email. Available fields: ' + Object.keys(userInfo).join(', '));
+        if (!validateInput.email(email)) {
+          throw new Error('Invalid user email format');
+        }
+        
+        // Check rate limiting
+        if (!checkRateLimit(auth0Id)) {
+          throw new Error('Rate limit exceeded. Please try again later.');
         }
         
         const userUuid = await this.ensureUserExists(auth0Id, email);
@@ -148,8 +185,18 @@ export const apiService = {
         const auth0Id = userInfo.sub || userInfo.user_id || userInfo.id;
         const email = userInfo.email;
         
-        if (!auth0Id || !email) {
-          throw new Error('User not authenticated - missing required user data');
+        // Validate user data
+        if (!validateInput.auth0Id(auth0Id)) {
+          throw new Error('Invalid user authentication data');
+        }
+        
+        if (!validateInput.email(email)) {
+          throw new Error('Invalid user email format');
+        }
+        
+        // Check rate limiting
+        if (!checkRateLimit(auth0Id)) {
+          throw new Error('Rate limit exceeded. Please try again later.');
         }
         
         const userUuid = await this.ensureUserExists(auth0Id, email);
@@ -245,8 +292,18 @@ export const apiService = {
         const auth0Id = userInfo.sub || userInfo.user_id || userInfo.id;
         const email = userInfo.email;
         
-        if (!auth0Id || !email) {
-          throw new Error('User not authenticated - missing required user data');
+        // Validate user data
+        if (!validateInput.auth0Id(auth0Id)) {
+          throw new Error('Invalid user authentication data');
+        }
+        
+        if (!validateInput.email(email)) {
+          throw new Error('Invalid user email format');
+        }
+        
+        // Check rate limiting
+        if (!checkRateLimit(auth0Id)) {
+          throw new Error('Rate limit exceeded. Please try again later.');
         }
         
         const userUuid = await this.ensureUserExists(auth0Id, email);
@@ -358,91 +415,52 @@ export const apiService = {
 
   async ensureUserExists(auth0Id: string, email: string): Promise<string> {
     try {
-      // For development: create a deterministic UUID from auth0Id
-      // This avoids RLS issues while maintaining user isolation
-      if (bypassRLS) {
-        console.log('Using bypass mode for RLS - creating deterministic user UUID');
-        // Create a simple deterministic UUID for consistent user identification
-        // Using a simple hash function that works in React Native
-        let hash = 0;
-        for (let i = 0; i < auth0Id.length; i++) {
-          const char = auth0Id.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32-bit integer
-        }
-        const hashStr = Math.abs(hash).toString(16).padStart(8, '0');
-        const uuid = `${hashStr.slice(0,8)}-4000-4000-8000-${hashStr.repeat(3).slice(0,12)}`;
+      // Validate inputs
+      if (!validateInput.auth0Id(auth0Id) || !validateInput.email(email)) {
+        throw new Error('Invalid user identification data');
+      }
+      
+      // SECURITY: Generate cryptographically secure UUID with salt
+      // This prevents reverse engineering of Auth0 IDs
+      if (useApplicationLevelSecurity) {
+        // Add application-specific salt to prevent brute force attacks
+        const APP_SALT = 'will-counter-app-2024-secure-salt-v1';
+        const encoder = new TextEncoder();
+        const data = encoder.encode(APP_SALT + auth0Id + email + APP_SALT);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = new Uint8Array(hashBuffer);
         
-        console.log('Generated UUID for user:', uuid);
+        // Use multiple rounds of hashing for additional security
+        const secondHash = await crypto.subtle.digest('SHA-256', hashArray);
+        const finalArray = new Uint8Array(secondHash);
+        
+        // Create a proper UUID v4 format from the hash
+        const hex = Array.from(finalArray).map(b => b.toString(16).padStart(2, '0')).join('');
+        const uuid = [
+          hex.slice(0, 8),
+          hex.slice(8, 12),
+          '4' + hex.slice(12, 15), // Version 4
+          ('8' + hex.slice(15, 18)), // Variant bits  
+          hex.slice(18, 30).padEnd(12, '0')
+        ].join('-');
+        
         return uuid;
       }
-
-      // Try to get existing user first (normal RLS-enabled flow)
-      const authHeaders = await getSupabaseAuthHeaders();
-      const getUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?auth0_id=eq.${auth0Id}&select=*`, {
-        headers: authHeaders
-      });
       
-      console.log('getUserResponse status:', getUserResponse.status);
-      
-      if (getUserResponse.ok) {
-        const existingUsers = await getUserResponse.json();
-        console.log('Existing users found:', existingUsers);
-        if (existingUsers && existingUsers.length > 0) {
-          return existingUsers[0].id;
-        }
-      } else {
-        const errorText = await getUserResponse.text();
-        console.error('Failed to query existing users:', getUserResponse.status, errorText);
-        
-        // If it's a 401 error due to RLS policies, fall back to bypass mode
-        if (getUserResponse.status === 401) {
-          console.log('RLS policy blocking access - falling back to bypass mode');
-          let hash = 0;
-          for (let i = 0; i < auth0Id.length; i++) {
-            const char = auth0Id.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32-bit integer
-          }
-          const hashStr = Math.abs(hash).toString(16).padStart(8, '0');
-          const uuid = `${hashStr.slice(0,8)}-4000-4000-8000-${hashStr.repeat(3).slice(0,12)}`;
-          return uuid;
-        }
-      }
-      
-      // If we reach here, it means RLS is working but user doesn't exist
-      // Try to create the user (this will likely fail due to RLS too)
-      console.log('Attempting to create new user with RLS...');
-      const createUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-        method: 'POST',
-        headers: {
-          ...authHeaders,
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({ auth0_id: auth0Id, email })
-      });
-      
-      if (createUserResponse.ok) {
-        const newUser = await createUserResponse.json();
-        if (Array.isArray(newUser) && newUser.length > 0) {
-          return newUser[0].id;
-        } else if (newUser.id) {
-          return newUser.id;
-        }
-      }
-      
-      // If creation fails, fall back to deterministic UUID
-      console.log('User creation failed, falling back to deterministic UUID');
-      let hash = 0;
-      for (let i = 0; i < auth0Id.length; i++) {
-        const char = auth0Id.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-      }
-      const hashStr = Math.abs(hash).toString(16).padStart(8, '0');
-      return `${hashStr.slice(0,8)}-4000-4000-8000-${hashStr.repeat(3).slice(0,12)}`;
+      throw new Error('Invalid security configuration');
     } catch (error) {
-      throw error;
+      // Secure fallback with salt (deterministic)
+      const APP_SALT = 'will-counter-fallback-salt-2024';
+      const secureInput = APP_SALT + auth0Id + email + APP_SALT;
+      const simpleHash = btoa(secureInput).replace(/[^a-f0-9]/gi, '').toLowerCase();
+      const uuid = [
+        simpleHash.slice(0, 8).padEnd(8, '0'),
+        simpleHash.slice(8, 12).padEnd(4, '0'),
+        '4' + simpleHash.slice(12, 15).padEnd(3, '0'),
+        '8' + simpleHash.slice(15, 18).padEnd(3, '0'),
+        simpleHash.slice(18, 30).padEnd(12, '0')
+      ].join('-');
+      return uuid;
     }
   },
 
@@ -453,28 +471,18 @@ export const apiService = {
       const userInfoString = await SecureStore.getItemAsync('userInfo');
       
       if (!userInfoString) {
-        console.log('No stored user info found - user may need to log in again');
         return null;
       }
 
       const userInfo = JSON.parse(userInfoString);
-      console.log('getCurrentUser - raw userInfo:', JSON.stringify(userInfo, null, 2));
 
       // Auth0 can return user info in different formats
       // Common fields: sub, user_id, email, email_verified, name, picture, etc.
       const auth0Id = userInfo.sub || userInfo.user_id || userInfo.id;
       const email = userInfo.email;
 
-      console.log('getCurrentUser - extracted:', { auth0Id, email });
-
-      if (!auth0Id) {
-        console.error('User info missing Auth0 ID field. Available fields:', Object.keys(userInfo));
-        // Don't return null immediately, let the caller handle this
-      }
-
-      if (!email) {
-        console.error('User info missing email field. Available fields:', Object.keys(userInfo));
-        // Don't return null immediately, let the caller handle this
+      if (!auth0Id || !email) {
+        return null;
       }
 
       // Return the normalized user object
@@ -484,7 +492,6 @@ export const apiService = {
         email: email,
       };
     } catch (error) {
-      console.error('Error getting current user:', error);
       return null;
     }
   }

@@ -17,7 +17,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserId(user.id);
     } catch (error) {
       // Handle existing user case
-      console.error('Login failed:', error);
     }
   };
 

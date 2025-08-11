@@ -54,11 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (accessToken && userInfo) {
         const parsedUser = JSON.parse(userInfo);
-        console.log('AuthContext - checkAuthState - parsedUser:', {
-          sub: parsedUser.sub,
-          email: parsedUser.email,
-          allKeys: Object.keys(parsedUser)
-        });
         setIsAuthenticated(true);
         setUserState(parsedUser);
         dispatch(setUser(parsedUser));
@@ -102,11 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           
           const userInfo = await userInfoResponse.json();
-          console.log('AuthContext - handleAuthResponse - userInfo from Auth0:', {
-            sub: userInfo.sub,
-            email: userInfo.email,
-            allKeys: Object.keys(userInfo)
-          });
           
           // Store tokens and user info securely
           await SecureStore.setItemAsync('accessToken', tokenResponse.accessToken);

@@ -44,14 +44,12 @@ const WillCounterScreen: React.FC = () => {
 
   // Load today's count on component mount
   useEffect(() => {
-    console.log('Component mounted, fetching today count');
     // Load count immediately for testing (bypassing auth for now)
     dispatch(fetchTodayCount(''));
   }, [dispatch]);
 
   // Debug count changes
   useEffect(() => {
-    console.log('Count changed to:', count);
   }, [count]);
 
   // Update local history when count changes
@@ -82,7 +80,6 @@ const WillCounterScreen: React.FC = () => {
 
   // Increment counter
   const handleIncrement = useCallback((): void => {
-    console.log('Handle increment called, current count:', count);
     // Backend API will extract user from JWT token
     dispatch(incrementCount(''));
     triggerHaptic('light');
