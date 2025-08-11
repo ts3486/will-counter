@@ -20,15 +20,8 @@ import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 
 fun main() {
-    // Initialize database
-    println("Initializing database...")
-    try {
-        DatabaseConfig.init()
-        println("Database initialized successfully")
-    } catch (e: Exception) {
-        println("Failed to initialize database: ${e.message}")
-        return
-    }
+    // Note: Database initialization skipped - using Supabase service directly
+    println("Starting Will Counter API (Supabase mode)...")
     
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)

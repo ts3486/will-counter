@@ -56,12 +56,16 @@ class SupabaseService {
             throw IllegalStateException("SUPABASE_SERVICE_ROLE_KEY environment variable is required")
         }
         
-        // Security: Never log the service role key, validate it starts correctly  
-        if (!serviceRoleKey.startsWith("eyJ")) {
-            println("⚠️ Warning: Service role key may not be valid JWT format")
+        // Handle mock environment gracefully
+        if (supabaseUrl.startsWith("https://mock.") || serviceRoleKey.startsWith("mock-")) {
+            println("🧪 Mock environment detected - Supabase service initialized in test mode")
+        } else {
+            // Security: Never log the service role key, validate it starts correctly  
+            if (!serviceRoleKey.startsWith("eyJ")) {
+                println("⚠️ Warning: Service role key may not be valid JWT format")
+            }
+            println("✅ Supabase service initialized with URL: ${maskUrl(supabaseUrl)}")
         }
-        
-        println("✅ Supabase service initialized with URL: ${maskUrl(supabaseUrl)}")
     }
     
     private val httpClient = HttpClient(CIO) {
