@@ -72,6 +72,9 @@ class SupabaseClient {
     private val serviceRoleKey = System.getProperty("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_SERVICE_ROLE_KEY")
         ?: throw IllegalStateException("SUPABASE_SERVICE_ROLE_KEY environment variable is required")
 
+    // Local fallback storage for when Supabase is unavailable
+    private val fallbackStorage = mutableMapOf<String, SupabaseWillCount>()
+
     private val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
@@ -122,15 +125,15 @@ class SupabaseClient {
                 setBody(userData)
             }
 
+            val responseText = createResponse.bodyAsText()
             if (createResponse.status == HttpStatusCode.Created) {
-                val responseText = createResponse.bodyAsText()
                 val createdUsers = Json.decodeFromString<List<SupabaseUser>>(responseText)
                 if (createdUsers.isNotEmpty()) {
                     return createdUsers[0].id
                 }
             }
 
-            throw RuntimeException("Failed to create or find user for auth0_id: $auth0Id")
+            throw RuntimeException("Failed to create user for auth0_id: $auth0Id. Status: ${createResponse.status}, Response: $responseText")
         } catch (e: Exception) {
             // Fallback: generate deterministic UUID based on auth0Id
             "fallback-user-${auth0Id.take(16)}"
@@ -200,9 +203,14 @@ class SupabaseClient {
     
     private fun createFallbackTodayCount(userUuid: String): SupabaseWillCount {
         val today = LocalDate.now().toString()
-        val now = LocalDateTime.now().toString()
+        val storageKey = "${userUuid}-${today}"
         
-        return SupabaseWillCount(
+        // Return existing record if it exists
+        fallbackStorage[storageKey]?.let { return it }
+        
+        // Create new record
+        val now = LocalDateTime.now().toString()
+        val newRecord = SupabaseWillCount(
             id = "fallback-${userUuid.take(8)}-${today}",
             user_id = userUuid,
             date = today,
@@ -211,6 +219,10 @@ class SupabaseClient {
             created_at = now,
             updated_at = now
         )
+        
+        // Store in local cache
+        fallbackStorage[storageKey] = newRecord
+        return newRecord
     }
 
     /**
@@ -263,7 +275,10 @@ class SupabaseClient {
             // Fallback: increment local record
             val currentRecord = getTodayCount(userUuid)
             val now = LocalDateTime.now().toString()
-            SupabaseWillCount(
+            val today = LocalDate.now().toString()
+            val storageKey = "${userUuid}-${today}"
+            
+            val updatedRecord = SupabaseWillCount(
                 id = currentRecord.id,
                 user_id = currentRecord.user_id,
                 date = currentRecord.date,
@@ -272,6 +287,10 @@ class SupabaseClient {
                 created_at = currentRecord.created_at,
                 updated_at = now
             )
+            
+            // Update local storage
+            fallbackStorage[storageKey] = updatedRecord
+            return updatedRecord
         }
     }
 
@@ -306,7 +325,10 @@ class SupabaseClient {
         } catch (e: Exception) {
             // Fallback: reset local record
             val currentRecord = getTodayCount(userUuid)
-            SupabaseWillCount(
+            val today = LocalDate.now().toString()
+            val storageKey = "${userUuid}-${today}"
+            
+            val resetRecord = SupabaseWillCount(
                 id = currentRecord.id,
                 user_id = currentRecord.user_id,
                 date = currentRecord.date,
@@ -315,6 +337,10 @@ class SupabaseClient {
                 created_at = currentRecord.created_at,
                 updated_at = LocalDateTime.now().toString()
             )
+            
+            // Update local storage
+            fallbackStorage[storageKey] = resetRecord
+            return resetRecord
         }
     }
 

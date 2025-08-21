@@ -84,6 +84,7 @@ fun Application.module() {
             }
         }
         
+        
         // Secure Supabase-based routes (recommended)
         secureWillCountRoutes(supabaseClient)
         
