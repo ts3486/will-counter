@@ -21,6 +21,53 @@ const useSupabaseDirectly = false; // Always use backend for security
 const getAuthHeaders = async () => {
   try {
     const accessToken = await SecureStore.getItemAsync('accessToken');
+    
+    if (!accessToken) {
+      return {
+        'Content-Type': 'application/json',
+      };
+    }
+    
+    // Handle case where token might be stored as object or corrupted
+    let tokenString = accessToken;
+    if (typeof accessToken !== 'string') {
+      try {
+        tokenString = String(accessToken);
+      } catch (e) {
+        tokenString = '';
+      }
+    }
+    
+    // Check if token looks like a JWT or JWE
+    const parts = tokenString.split('.');
+    if (parts.length === 5) {
+      // JWE tokens are valid and more secure
+    } else if (parts.length === 3) {
+      // Validate JWT token
+      try {
+        const payload = JSON.parse(atob(parts[1]));
+        const now = Math.floor(Date.now() / 1000);
+        
+        if (payload.exp < now) {
+          await SecureStore.deleteItemAsync('accessToken');
+          return {
+            'Content-Type': 'application/json',
+          };
+        }
+      } catch (e) {
+        await SecureStore.deleteItemAsync('accessToken');
+        return {
+          'Content-Type': 'application/json',
+        };
+      }
+    } else {
+      // Clear invalid token
+      await SecureStore.deleteItemAsync('accessToken');
+      return {
+        'Content-Type': 'application/json',
+      };
+    }
+    
     return {
       'Content-Type': 'application/json',
       'Authorization': accessToken ? `Bearer ${accessToken}` : '',
@@ -43,6 +90,9 @@ export const apiService = {
         headers,
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please log in to continue.');
+        }
         const errorText = await response.text();
         throw new Error(`Failed to fetch today count: ${response.status} - ${errorText}`);
       }
@@ -70,6 +120,9 @@ export const apiService = {
         headers,
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please log in to continue.');
+        }
         const errorText = await response.text();
         throw new Error(`Failed to increment count: ${response.status} - ${errorText}`);
       }
@@ -97,6 +150,9 @@ export const apiService = {
         headers,
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please log in to continue.');
+        }
         const errorText = await response.text();
         throw new Error(`Failed to reset count: ${response.status} - ${errorText}`);
       }
@@ -113,7 +169,7 @@ export const apiService = {
     }
   },
 
-  async createUser(auth0Id: string, email: string) {
+  async createUser(_auth0Id?: string, _email?: string) {
     // Use secure backend API for user creation
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/api/will-counts/users/ensure`, {
@@ -121,6 +177,9 @@ export const apiService = {
       headers,
     });
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in to continue.');
+      }
       const errorText = await response.text();
       throw new Error(`Failed to ensure user exists: ${response.status} - ${errorText}`);
     }

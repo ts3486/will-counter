@@ -1,5 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.9.25"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
     id("io.ktor.plugin") version "2.3.12"
     application
 }
@@ -56,6 +57,9 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:0.50.1")
     implementation("com.auth0:java-jwt:4.4.0")
     implementation("com.auth0:jwks-rsa:0.22.1")
+    
+    // JWE (JSON Web Encryption) support for encrypted tokens
+    implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
     implementation("ch.qos.logback:logback-classic:1.4.14")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")

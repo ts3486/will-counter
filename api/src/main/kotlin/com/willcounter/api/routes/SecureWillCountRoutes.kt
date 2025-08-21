@@ -27,9 +27,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 try {
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
+                        call.respond(HttpStatusCode.Unauthorized, mapOf(
+                            "success" to false,
+                            "error" to "Authentication required"
                         ))
                         return@post
                     }
@@ -47,9 +47,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                         message = "User ensured successfully"
                     ))
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to ensure user exists: ${e.message}"
+                    call.respond(HttpStatusCode.InternalServerError, mapOf(
+                        "success" to false,
+                        "error" to "Failed to ensure user exists: ${e.message}"
                     ))
                 }
             }
@@ -62,9 +62,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 try {
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
+                        call.respond(HttpStatusCode.Unauthorized, mapOf(
+                            "success" to false,
+                            "error" to "Authentication required"
                         ))
                         return@get
                     }
@@ -93,10 +93,11 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                     
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to get today's count: ${e.message}"
-                    ))
+                    call.respondText(
+                        """{"success": false, "error": "Failed to get today's count: ${e.message}"}""",
+                        ContentType.Application.Json,
+                        HttpStatusCode.InternalServerError
+                    )
                 }
             }
             
@@ -108,9 +109,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 try {
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
+                        call.respond(HttpStatusCode.Unauthorized, mapOf(
+                            "success" to false,
+                            "error" to "Authentication required"
                         ))
                         return@post
                     }
@@ -139,9 +140,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                     
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to increment count: ${e.message}"
+                    call.respond(HttpStatusCode.InternalServerError, mapOf(
+                        "success" to false,
+                        "error" to "Failed to increment count: ${e.message}"
                     ))
                 }
             }
@@ -154,9 +155,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 try {
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
+                        call.respond(HttpStatusCode.Unauthorized, mapOf(
+                            "success" to false,
+                            "error" to "Authentication required"
                         ))
                         return@post
                     }
@@ -185,9 +186,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                     
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to reset count: ${e.message}"
+                    call.respond(HttpStatusCode.InternalServerError, mapOf(
+                        "success" to false,
+                        "error" to "Failed to reset count: ${e.message}"
                     ))
                 }
             }
@@ -200,9 +201,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 try {
                     val principal = call.principal<Auth0Principal>()
                     val auth0Id = principal?.userId ?: run {
-                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
-                            success = false,
-                            error = "Authentication required"
+                        call.respond(HttpStatusCode.Unauthorized, mapOf(
+                            "success" to false,
+                            "error" to "Authentication required"
                         ))
                         return@get
                     }
@@ -244,9 +245,9 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                         data = response
                     ))
                 } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
-                        success = false,
-                        error = "Failed to get statistics: ${e.message}"
+                    call.respond(HttpStatusCode.InternalServerError, mapOf(
+                        "success" to false,
+                        "error" to "Failed to get statistics: ${e.message}"
                     ))
                 }
             }
