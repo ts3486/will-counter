@@ -93,7 +93,7 @@ fun Application.module() {
                     call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable - Database connectivity issues")
                 }
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable: ${e.message}")
+                call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable")
             }
         }
         

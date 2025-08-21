@@ -49,7 +49,7 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, mapOf(
                         "success" to false,
-                        "error" to "Failed to ensure user exists: ${e.message}"
+                        "error" to "Failed to ensure user exists"
                     ))
                 }
             }
@@ -94,7 +94,7 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
                     call.respondText(
-                        """{"success": false, "error": "Failed to get today's count: ${e.message}"}""",
+                        """{"success": false, "error": "Failed to get today's count"}""",
                         ContentType.Application.Json,
                         HttpStatusCode.InternalServerError
                     )
@@ -142,7 +142,7 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, mapOf(
                         "success" to false,
-                        "error" to "Failed to increment count: ${e.message}"
+                        "error" to "Failed to increment count"
                     ))
                 }
             }
@@ -188,7 +188,7 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, mapOf(
                         "success" to false,
-                        "error" to "Failed to reset count: ${e.message}"
+                        "error" to "Failed to reset count"
                     ))
                 }
             }
@@ -247,7 +247,7 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, mapOf(
                         "success" to false,
-                        "error" to "Failed to get statistics: ${e.message}"
+                        "error" to "Failed to get statistics"
                     ))
                 }
             }

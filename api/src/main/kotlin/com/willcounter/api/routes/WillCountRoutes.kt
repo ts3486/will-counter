@@ -50,7 +50,7 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                         success = false,
-                        error = "Failed to get today's count: ${e.message}"
+                        error = "Failed to get today's count"
                     ))
                 }
             }
@@ -92,7 +92,7 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                         success = false,
-                        error = "Failed to increment count: ${e.message}"
+                        error = "Failed to increment count"
                     ))
                 }
             }
@@ -125,7 +125,7 @@ fun Route.willCountRoutes(databaseService: DatabaseService) {
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                     success = false,
-                    error = "Failed to get statistics: ${e.message}"
+                    error = "Failed to get statistics"
                 ))
             }
         }
