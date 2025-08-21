@@ -37,6 +37,8 @@ fun Application.module() {
     // Configure authentication
     configureAuthentication()
     
+    // Security middleware will be added via response headers in routing
+    
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true
@@ -54,7 +56,18 @@ fun Application.module() {
         allowMethod(HttpMethod.Get)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
-        anyHost()
+        
+        // Secure CORS - only allow specific hosts
+        allowHost("localhost:3000") // React dev server
+        allowHost("localhost:8081") // Expo dev server  
+        allowHost("127.0.0.1:3000")
+        allowHost("127.0.0.1:8081")
+        
+        // Add production domains when deployed
+        // allowHost("your-production-domain.com", schemes = listOf("https"))
+        
+        // Allow credentials for authenticated requests
+        allowCredentials = true
     }
     
     val databaseService = DatabaseService()

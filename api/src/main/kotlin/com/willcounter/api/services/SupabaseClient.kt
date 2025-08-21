@@ -133,7 +133,7 @@ class SupabaseClient {
                 }
             }
 
-            throw RuntimeException("Failed to create user for auth0_id: $auth0Id. Status: ${createResponse.status}, Response: $responseText")
+            throw RuntimeException("Failed to create user for auth0_id: $auth0Id. Status: ${createResponse.status}")
         } catch (e: Exception) {
             // Fallback: generate deterministic UUID based on auth0Id
             "fallback-user-${auth0Id.take(16)}"
