@@ -81,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             redirectUri: auth0Config.redirectUri,
             extraParams: {
               code_verifier: request?.codeVerifier || '',
+              audience: auth0Config.audience,
             },
           },
           {

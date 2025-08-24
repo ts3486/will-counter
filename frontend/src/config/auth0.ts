@@ -31,7 +31,7 @@ export const createAuthRequest = (): AuthRequestConfig => ({
   clientId: auth0Config.clientId,
   scopes: auth0Config.scope.split(' '),
   redirectUri: auth0Config.redirectUri,
-  additionalParameters: {
+  extraParams: {
     audience: auth0Config.audience,
   },
 });

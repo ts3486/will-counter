@@ -21,7 +21,13 @@ application {
             if (line.isNotBlank() && !line.startsWith("#")) {
                 val parts = line.split("=", limit = 2)
                 if (parts.size == 2) {
-                    envProps.add("-D${parts[0]}=${parts[1]}")
+                    val key = parts[0].trim()
+                    val value = parts[1].trim()
+                    
+                    // Validate environment variable name to prevent injection
+                    if (key.matches(Regex("^[A-Z_][A-Z0-9_]*$"))) {
+                        envProps.add("-D${key}=${value}")
+                    }
                 }
             }
         }
@@ -63,4 +69,26 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.14")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+}
+
+// Configure the run task to use environment variables
+tasks.named<JavaExec>("run") {
+    // Load .env file if it exists and set as system properties for the run task
+    val envFile = file(".env")
+    if (envFile.exists()) {
+        envFile.readLines().forEach { line ->
+            if (line.isNotBlank() && !line.startsWith("#")) {
+                val parts = line.split("=", limit = 2)
+                if (parts.size == 2) {
+                    val key = parts[0].trim()
+                    val value = parts[1].trim()
+                    
+                    // Validate environment variable name to prevent injection
+                    if (key.matches(Regex("^[A-Z_][A-Z0-9_]*$"))) {
+                        systemProperty(key, value)
+                    }
+                }
+            }
+        }
+    }
 }

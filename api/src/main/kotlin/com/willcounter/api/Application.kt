@@ -103,6 +103,6 @@ fun Application.module() {
         
         // Legacy routes for backward compatibility (can be removed after migration)
         userRoutes(databaseService)
-        willCountRoutes(databaseService)
+        // willCountRoutes(databaseService) // DISABLED: Conflicts with secure routes
     }
 }
