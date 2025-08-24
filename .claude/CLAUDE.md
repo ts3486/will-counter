@@ -92,4 +92,57 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=
 2. Verify regex validation allows your env var names
 3. Ensure proper dependencies in build.gradle.kts
 
+## Mandatory Cleanup Workflow
+
+**CRITICAL: Always perform these cleanup steps at the end of every session**
+
+### Debug Code Cleanup Checklist
+```bash
+# 1. Remove all debug logging and print statements
+# Search for debug patterns in the codebase:
+grep -r "println\|console\.log\|print(" api/ frontend/ --include="*.kt" --include="*.ts" --include="*.js"
+
+# 2. Remove temporary test endpoints and routes
+# Look for test endpoints like /test-fix, /debug, /temp
+grep -r "/test-\|/debug\|/temp" api/src/ --include="*.kt"
+
+# 3. Clean up temporary files
+find . -name "*.tmp" -o -name "*.temp" -o -name "debug-*" -delete
+
+# 4. Kill any background processes and free ports
+pkill -f "gradlew run" || true
+pkill -f "npm start" || true
+lsof -ti:8080 | xargs kill -9 2>/dev/null || true
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+```
+
+### Pre-Commit Verification
+```bash
+# Verify no debug code remains before any commits
+# These commands should return zero results:
+grep -r "TODO.*debug\|FIXME.*temp\|println\|console\.log" . --exclude-dir=node_modules --exclude-dir=.git
+
+# Test that the app starts without debug endpoints
+cd api && ./gradlew build
+cd frontend && npm run build
+```
+
+### Session End Protocol
+1. **Always search for and remove**:
+   - `println()` statements in Kotlin files
+   - `console.log()` statements in TypeScript/JavaScript
+   - Temporary endpoints (e.g., `/test-fix`, `/debug`)
+   - Debug headers or request logging
+   - Test user data or hardcoded values
+
+2. **Always kill processes**:
+   - Backend servers on port 8080
+   - Frontend servers on port 3000
+   - Any other development servers
+
+3. **Always verify**:
+   - No debug code in committed files
+   - All temporary endpoints removed
+   - Proper error handling without verbose logging
+
 This reference helps you quickly find commands and remember recent fixes.
