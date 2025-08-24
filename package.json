@@ -1,32 +1,32 @@
 {
   "name": "will-counter",
   "version": "1.0.0",
-  "description": "A monorepo for Will Counter application with Kotlin API, React Native frontend, and Supabase database",
-  "private": true,
-  "workspaces": [
-    "api",
-    "frontend",
-    "shared"
-  ],
+  "description": "Habit tracking application with agent-driven development workflow",
+  "main": "index.js",
   "scripts": {
-    "dev:api": "cd api && ./gradlew run",
-    "build:api": "cd api && ./gradlew build",
+    "agent:workflow": "node scripts/claude-agent-workflow.js",
+    "agent:pm": "node scripts/claude-agent-workflow.js",
+    "workflow:start": "bash scripts/agent-workflow.sh",
+    "dev:setup": "bash scripts/dev-setup.sh",
+    "dev:backend": "cd api && ./gradlew run",
     "dev:frontend": "cd frontend && npm start",
-    "android": "cd frontend && npm run android",
-    "ios": "cd frontend && npm run ios",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces",
-    "install:all": "npm install && cd api && ./gradlew build",
-    "clean": "rm -rf node_modules && rm -rf */node_modules && cd api && ./gradlew clean"
+    "test:all": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd api && ./gradlew test",
+    "test:frontend": "cd frontend && npm test",
+    "clean": "bash .claude/cleanup.sh",
+    "security:audit": "npm audit && cd api && ./gradlew dependencyCheckAnalyze"
   },
+  "keywords": ["habit-tracking", "mobile-app", "kotlin", "react-native", "agent-workflow"],
+  "author": "Will Counter Team",
+  "license": "MIT",
   "devDependencies": {
-    "@types/react": "~19.0.10",
-    "concurrently": "^8.2.2",
-    "prettier": "^3.0.0"
+    "@types/node": "^20.0.0"
   },
   "engines": {
-    "node": ">=18",
-    "npm": ">=8"
+    "node": ">=18.0.0"
   },
-  "dependencies": {}
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/will-counter.git"
+  }
 }
