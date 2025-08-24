@@ -12,7 +12,10 @@ object Auth0Config {
     
     private val jwkProvider by lazy {
         if (domain.isEmpty()) {
-            throw IllegalStateException("AUTH0_DOMAIN must be set")
+            throw IllegalStateException("AUTH0_DOMAIN must be set - configuration error")
+        }
+        if (audience.isEmpty()) {
+            throw IllegalStateException("AUTH0_AUDIENCE must be set - configuration error")
         }
         JwkProviderBuilder(domain)
             .cached(10, 24, TimeUnit.HOURS)
@@ -38,7 +41,7 @@ object Auth0Config {
     private fun verifyJWTToken(token: String): DecodedJWT? {
         return try {
             if (domain.isEmpty() || audience.isEmpty()) {
-                return null
+                throw IllegalStateException("AUTH0_DOMAIN and AUTH0_AUDIENCE must be configured")
             }
             
             // Parse token header to get key ID

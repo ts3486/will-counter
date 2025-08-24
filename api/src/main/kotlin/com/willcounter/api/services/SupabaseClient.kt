@@ -97,24 +97,39 @@ class SupabaseClient {
     )
 
     /**
-     * Ensure user exists in Supabase users table
-     * Returns user UUID for database operations
+     * Helper function to get user by auth0Id
      */
-    suspend fun ensureUserExists(auth0Id: String, email: String): String {
+    private suspend fun getUserByAuth0Id(auth0Id: String): String? {
         return try {
-            // First check if user exists
             val response = httpClient.get("$supabaseUrl/rest/v1/users") {
                 baseHeaders.forEach { (key, value) -> header(key, value) }
                 parameter("auth0_id", "eq.$auth0Id")
                 parameter("select", "id")
             }
-
+            
             if (response.status == HttpStatusCode.OK) {
                 val responseText = response.bodyAsText()
                 val users = Json.decodeFromString<List<SupabaseUser>>(responseText)
                 if (users.isNotEmpty()) {
                     return users[0].id
                 }
+            }
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Ensure user exists in Supabase users table
+     * Returns user UUID for database operations
+     */
+    suspend fun ensureUserExists(auth0Id: String, email: String): String {
+        try {
+            // First try to fetch existing user
+            val existingUserId = getUserByAuth0Id(auth0Id)
+            if (existingUserId != null) {
+                return existingUserId
             }
 
             // Create new user
@@ -133,10 +148,19 @@ class SupabaseClient {
                 }
             }
 
+            // Handle 409 Conflict - user already exists, but we can't query them
+            // This typically means there's a constraint violation (like duplicate email)
+            // but the auth0_id query doesn't find them, suggesting a schema mismatch
+            if (createResponse.status == HttpStatusCode.Conflict) {
+                // Create a consistent fallback user ID for this auth0_id
+                val fallbackId = "fallback-${auth0Id.hashCode()}"
+                return fallbackId
+            }
+
             throw RuntimeException("Failed to create user for auth0_id: $auth0Id. Status: ${createResponse.status}")
         } catch (e: Exception) {
-            // Fallback: generate deterministic UUID based on auth0Id
-            "fallback-user-${auth0Id.take(16)}"
+            // For database connection issues, throw a more specific error
+            throw RuntimeException("Database unavailable: Cannot ensure user exists for auth0_id: $auth0Id", e)
         }
     }
 

@@ -17,6 +17,7 @@ import io.ktor.http.*
 fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
     route("/api/will-counts") {
         
+        
         authenticate("auth0") {
             
             /**
@@ -94,7 +95,7 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
                     call.respondText(
-                        """{"success": false, "error": "Failed to get today's count"}""",
+                        """{"success": false, "error": "Failed to get today's count: ${e.message}"}""",
                         ContentType.Application.Json,
                         HttpStatusCode.InternalServerError
                     )

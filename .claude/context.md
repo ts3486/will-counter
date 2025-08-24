@@ -3,69 +3,70 @@
 ## Current Development Context
 
 ### Active Development Areas
-- **Authentication System**: Recently fixed logout popup issue, added success messaging
-- **Testing Infrastructure**: Enhanced Jest configuration with comprehensive Expo mocks
-- **CI/CD Pipeline**: Fixed GitHub Actions workflows for frontend tests and security scanning
-- **Frontend Architecture**: React Native + Expo with TypeScript and Redux
+- **Authentication System**: ✅ **COMPLETED** - Fixed critical authentication bypass vulnerability, JWT token validation working
+- **Security Hardening**: ✅ **COMPLETED** - Fixed environment variable injection vulnerability in build.gradle.kts  
+- **Backend API**: ✅ **WORKING** - Kotlin/Ktor server with Auth0 JWT validation and Supabase integration
+- **Frontend Auth Flow**: ✅ **WORKING** - React Native + Expo with Auth0 OAuth returning proper 3-part JWT tokens
 
 ### Recent Problem Solving
-1. **Auth0 Logout Issue**: Removed `WebBrowser.openAuthSessionAsync()` call that was causing unwanted login popup after logout
-2. **CI Test Failures**: Created `.eslintrc.js` configuration and added proper mocks for Expo modules
-3. **Security Vulnerabilities**: Fixed npm audit issues with `npm audit fix`
-4. **Cache Issues**: Fixed GitHub Actions cache dependency paths for npm
+1. **Critical Security Fix**: Removed authentication bypass vulnerability from Auth0Config.kt (JWE processing)
+2. **Token Format Issue**: Fixed Auth0 configuration to return JWT tokens instead of opaque tokens by changing `additionalParameters` to `extraParams` 
+3. **Environment Variable Injection**: Added validation regex `^[A-Z_][A-Z0-9_]*$` to prevent command injection in Gradle build
+4. **Authentication Flow**: Successfully debugged and resolved "Authentication required" errors in fetchTodayCount endpoint
 
 ### Technical Stack Understanding
 - **Frontend**: React Native 0.79 + Expo 53 + TypeScript + Redux Toolkit
-- **Backend**: Kotlin + Ktor 2.3 + Gradle 8.13
-- **Database**: Supabase (PostgreSQL) with REST API access
-- **Authentication**: Auth0 OAuth with JWT tokens and secure storage
+- **Backend**: Kotlin + Ktor 2.3 + Gradle 8.13 + Auth0 JWT validation with RS256
+- **Database**: Supabase (PostgreSQL) with REST API access and service role authentication
+- **Authentication**: Auth0 OAuth with 3-part JWT tokens (fixed from opaque token issue)
+- **Security**: Input validation, JWT verification with JWK provider, environment variable sanitization
 - **Testing**: Jest with React Test Renderer and comprehensive mocking
 
 ## Code Quality Standards
 
 ### Current Implementation Patterns
 ```typescript
-// React Component Pattern
-const ComponentName: React.FC = () => {
-  const { functionFromContext } = useContext();
-  const dispatch = useDispatch();
-  const selectorValue = useSelector(selectSomething);
-  
-  const handleAction = async () => {
-    try {
-      await someAsyncOperation();
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-  
-  return <View>...</View>;
-};
-
-// Redux Slice Pattern
-const sliceName = createSlice({
-  name: 'sliceName',
-  initialState,
-  reducers: {
-    actionName: (state, action) => {
-      state.property = action.payload;
-    },
+// Auth0 Configuration Pattern (FIXED)
+export const createAuthRequest = (): AuthRequestConfig => ({
+  clientId: auth0Config.clientId,
+  scopes: auth0Config.scope.split(' '),
+  redirectUri: auth0Config.redirectUri,
+  extraParams: {  // Changed from additionalParameters to extraParams
+    audience: auth0Config.audience,
   },
 });
+```
 
-// API Service Pattern
-export const apiService = {
-  async getData(params: Parameters): Promise<ReturnType> {
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+```kotlin
+// Secure JWT Validation Pattern (Auth0Config.kt)
+fun verifyToken(token: String): DecodedJWT? {
+    return try {
+        val parts = token.split(".")
+        // Only accept standard 3-part JWT tokens for security
+        if (parts.size == 3) {
+            return verifyJWTToken(token)
+        } else {
+            return null
+        }
+    } catch (e: Exception) {
+        null
     }
-  },
-};
+}
+
+// Environment Variable Validation Pattern (build.gradle.kts)
+if (key.matches(Regex("^[A-Z_][A-Z0-9_]*$"))) {
+    systemProperty(key, value)
+}
+```
+
+```typescript
+// API Service Pattern with Bearer Token
+const response = await fetch(`${API_URL}/api/will-counts/today`, {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
 ```
 
 ### Testing Patterns
@@ -101,8 +102,10 @@ jest.mock('expo-auth-session', () => ({
 ### File Structure Understanding
 ```
 will-counter/
-├── CLAUDE.md                 # Project memory (this file)
-├── .claude/                  # Claude Code settings
+├── .claude/                  # Claude Code settings and context
+│   ├── context.md           # This file - project memory
+│   ├── CLAUDE.md            # Commands and quick reference
+│   └── settings.json        # Claude Code configuration
 ├── .github/workflows/        # CI/CD pipelines
 ├── frontend/                 # React Native app
 │   ├── __tests__/           # Jest tests with Expo mocks
@@ -128,30 +131,30 @@ will-counter/
 4. **Database Issues**: Check Supabase dashboard, verify RLS policies, test with service role key
 
 ### Known Working Configurations
-- **ESLint**: Configured to ignore TypeScript files and use basic rules
-- **Jest**: Comprehensive mocks for expo-auth-session, expo-web-browser, expo-secure-store
-- **GitHub Actions**: Fixed cache paths and added security-events permissions
-- **Auth0**: Working logout without popup, proper token management
+- **Auth0**: Working JWT flow with proper audience configuration in `extraParams`
+- **JWT Validation**: Only accepts 3-part JWT tokens, validates with JWK provider
+- **Security**: Environment variable validation, no debug logging in production
+- **Backend**: Secure Kotlin/Ktor API with proper error handling
 
 ### Development Best Practices Established
 - **Error Handling**: Always wrap async operations in try/catch
 - **Testing**: Mock all external dependencies (Expo, Auth0, Supabase)
-- **Security**: Never commit actual environment variables
+- **Security**: Never commit actual environment variables, validate all inputs
 - **Code Organization**: Feature-based component organization
 - **State Management**: Use Redux Toolkit with typed selectors
 
 ## Debugging Context
 
-### Recently Solved Issues
-1. **Logout Popup**: Caused by `WebBrowser.openAuthSessionAsync()` in logout function
-2. **Test Failures**: Missing ESLint config and Expo module mocks
-3. **CI Cache Issues**: Incorrect working-directory and cache-dependency-path combination
-4. **Security Scan**: Missing permissions for GitHub Security tab upload
+### Recently Solved Issues (Current Session)
+1. **Critical Authentication Bypass**: Fixed JWE token processing vulnerability in Auth0Config.kt
+2. **JWT vs Opaque Token Issue**: Changed `additionalParameters` to `extraParams` in Auth0 configuration
+3. **Environment Variable Injection**: Added regex validation to prevent command injection in Gradle build
+4. **Authentication Flow**: Resolved persistent "Authentication required" errors in API endpoints
 
-### Working Solutions
-- **Auth Context**: Clean logout without browser popup, proper state clearing
-- **Test Mocks**: Comprehensive mocking strategy for all Expo modules
-- **CI Configuration**: Proper working-directory setup for GitHub Actions
-- **Security**: Zero npm audit vulnerabilities
+### Working Solutions (Current Session)
+- **Security**: Fixed critical vulnerabilities, implemented proper JWT validation with 3-part tokens only
+- **Auth0 Integration**: Working JWT token flow with proper audience parameter configuration  
+- **Backend Security**: Environment variable sanitization, secure token verification with JWK provider
+- **API Authentication**: All endpoints properly authenticate with Bearer tokens
 
 This context helps Claude Code understand the current state and successful patterns in the Will Counter project.

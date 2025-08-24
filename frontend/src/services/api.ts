@@ -28,45 +28,8 @@ const getAuthHeaders = async () => {
       };
     }
     
-    // Handle case where token might be stored as object or corrupted
-    let tokenString = accessToken;
-    if (typeof accessToken !== 'string') {
-      try {
-        tokenString = String(accessToken);
-      } catch (e) {
-        tokenString = '';
-      }
-    }
-    
-    // Check if token looks like a JWT or JWE
-    const parts = tokenString.split('.');
-    if (parts.length === 5) {
-      // JWE tokens are valid and more secure
-    } else if (parts.length === 3) {
-      // Validate JWT token
-      try {
-        const payload = JSON.parse(atob(parts[1]));
-        const now = Math.floor(Date.now() / 1000);
-        
-        if (payload.exp < now) {
-          await SecureStore.deleteItemAsync('accessToken');
-          return {
-            'Content-Type': 'application/json',
-          };
-        }
-      } catch (e) {
-        await SecureStore.deleteItemAsync('accessToken');
-        return {
-          'Content-Type': 'application/json',
-        };
-      }
-    } else {
-      // Clear invalid token
-      await SecureStore.deleteItemAsync('accessToken');
-      return {
-        'Content-Type': 'application/json',
-      };
-    }
+    // Remove client-side JWT validation - let server handle all token verification
+    // Client-side validation can be bypassed and is a security risk
     
     return {
       'Content-Type': 'application/json',
