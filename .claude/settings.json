@@ -1,7 +1,24 @@
 {
   "project": {
     "name": "Will Counter",
-    "description": "A React Native app for tracking willpower and habit building with Kotlin backend API"
+    "description": "A React Native app for tracking willpower and habit building with Kotlin backend API",
+    "type": "fullstack",
+    "languages": ["typescript", "kotlin"],
+    "frameworks": ["react-native", "expo", "ktor"],
+    "lastSecurityReview": "2024-08-24",
+    "status": "production-ready"
+  },
+  "security": {
+    "criticalVulnerabilitiesFixed": [
+      "authentication-bypass-auth0config",
+      "environment-variable-injection-gradle"
+    ],
+    "securityPrinciples": [
+      "only-3-part-jwt-tokens",
+      "validate-environment-variables", 
+      "no-debug-logs-production",
+      "bearer-token-authentication"
+    ]
   },
   "tools": {
     "enabled": [

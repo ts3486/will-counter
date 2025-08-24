@@ -114,10 +114,14 @@ jobs:
 
       - name: Auto-label issues
         uses: actions/github-script@v7
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
         with:
           script: |
-            const title = "${{ github.event.issue.title }}".toLowerCase();
-            const body = "${{ github.event.issue.body }}".toLowerCase();
+            // Safely access issue data through environment variables to prevent injection
+            const title = (process.env.ISSUE_TITLE || '').toLowerCase();
+            const body = (process.env.ISSUE_BODY || '').toLowerCase();
             const content = title + " " + body;
 
             const labels = [];

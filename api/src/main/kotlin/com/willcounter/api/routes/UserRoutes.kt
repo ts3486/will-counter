@@ -57,7 +57,7 @@ fun Route.userRoutes(databaseService: DatabaseService) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                         success = false,
-                        error = "Failed to create user: ${e.message}"
+                        error = "Failed to create user"
                     ))
                 }
             }
@@ -88,7 +88,7 @@ fun Route.userRoutes(databaseService: DatabaseService) {
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                         success = false,
-                        error = "Failed to get user: ${e.message}"
+                        error = "Failed to get user"
                     ))
                 }
             }
@@ -149,7 +149,7 @@ fun Route.userRoutes(databaseService: DatabaseService) {
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
                     success = false,
-                    error = "Failed to update login: ${e.message}"
+                    error = "Failed to update login"
                 ))
             }
         }

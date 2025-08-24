@@ -19,17 +19,11 @@ object DatabaseConfig {
                            ?: System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
         
         if (supabaseUrl.isEmpty() || supabaseKey.isEmpty()) {
-            println("⚠️ Supabase configuration incomplete. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) environment variables.")
             return
         }
         
-        // Test Supabase REST API connection instead of direct database
-        println("Testing Supabase REST API connection...")
-        if (testSupabaseConnection(supabaseUrl, supabaseKey)) {
-            println("Supabase REST API connection successful")
-        } else {
-            println("Warning: Supabase REST API connection failed")
-        }
+        // Test Supabase REST API connection
+        testSupabaseConnection(supabaseUrl, supabaseKey)
     }
     
     private fun testSupabaseConnection(supabaseUrl: String, supabaseKey: String): Boolean {
@@ -45,7 +39,6 @@ object DatabaseConfig {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
             response.statusCode() in 200..299
         } catch (e: Exception) {
-            println("Supabase connection test failed: ${e.message}")
             false
         }
     }
@@ -56,13 +49,11 @@ object DatabaseConfig {
                            ?: System.getenv("SUPABASE_SERVICE_ROLE_KEY") ?: System.getenv("SUPABASE_ANON_KEY") ?: ""
         
         if (supabaseUrl.isEmpty() || supabaseKey.isEmpty()) {
-            println("Database connection test failed: Missing environment variables")
             false
         } else {
             testSupabaseConnection(supabaseUrl, supabaseKey)
         }
     } catch (e: Exception) {
-        println("Database connection test failed: ${e.message}")
         false
     }
 }
