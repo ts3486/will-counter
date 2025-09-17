@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { apiService } from '../../services/api';
+import { improvedApiService } from '../../services/improvedApiService';
 import { WillCount } from '../../../../shared/types/database';
 import { RootState } from '../store';
+import { ErrorHandler } from '../../utils/errorHandler';
 
 interface WillCounterState {
   todayCount: number;
@@ -19,13 +20,25 @@ const initialState: WillCounterState = {
   lastIncrementTime: null,
 };
 
+// Initialize services on first use
+let servicesInitialized = false;
+
+const ensureServicesInitialized = async () => {
+  if (!servicesInitialized) {
+    await improvedApiService.initialize();
+    servicesInitialized = true;
+  }
+};
+
 export const fetchTodayCount = createAsyncThunk(
   'willCounter/fetchTodayCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      return await apiService.getTodayCount(userId);
+      await ensureServicesInitialized();
+      return await improvedApiService.getTodayCount(userId);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      const errorMessage = ErrorHandler.getErrorMessage(error);
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -34,9 +47,11 @@ export const incrementCount = createAsyncThunk(
   'willCounter/incrementCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      return await apiService.incrementCount(userId);
+      await ensureServicesInitialized();
+      return await improvedApiService.incrementCount(userId);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      const errorMessage = ErrorHandler.getErrorMessage(error);
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -45,9 +60,11 @@ export const resetCount = createAsyncThunk(
   'willCounter/resetCount',
   async (userId: string, { rejectWithValue }) => {
     try {
-      return await apiService.resetTodayCount(userId);
+      await ensureServicesInitialized();
+      return await improvedApiService.resetTodayCount(userId);
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      const errorMessage = ErrorHandler.getErrorMessage(error);
+      return rejectWithValue(errorMessage);
     }
   }
 );

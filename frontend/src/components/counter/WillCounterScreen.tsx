@@ -20,6 +20,7 @@ import {
   selectError
 } from '../../store/slices/willCounterSlice';
 import CircularCounter from './CircularCounter';
+import ErrorBoundary, { withErrorBoundary } from '../shared/ErrorBoundary';
 
 // Type definitions
 interface CounterHistoryItem {
@@ -130,30 +131,34 @@ const WillCounterScreen: React.FC = () => {
         </View>
 
         {/* Circular Counter */}
-        <View style={styles.counterContainer}>
-          <CircularCounter
-            count={count}
-            dailyGoal={dailyGoal}
-            onIncrement={handleIncrement}
-            isGoalReached={count >= dailyGoal}
-            isLoading={isLoading}
-          />
-          <Text style={styles.instructionText}>
-            Tap to track your willpower exercise
-          </Text>
-        </View>
+        <ErrorBoundary isolate>
+          <View style={styles.counterContainer}>
+            <CircularCounter
+              count={count}
+              dailyGoal={dailyGoal}
+              onIncrement={handleIncrement}
+              isGoalReached={count >= dailyGoal}
+              isLoading={isLoading}
+            />
+            <Text style={styles.instructionText}>
+              Tap to track your willpower exercise
+            </Text>
+          </View>
+        </ErrorBoundary>
 
         {/* Statistics */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Streak</Text>
-            <Text style={styles.statValue}>{streak}</Text>
+        <ErrorBoundary isolate>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Streak</Text>
+              <Text style={styles.statValue}>{streak}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Today's Goal</Text>
+              <Text style={styles.statValue}>{dailyGoal}</Text>
+            </View>
           </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Today's Goal</Text>
-            <Text style={styles.statValue}>{dailyGoal}</Text>
-          </View>
-        </View>
+        </ErrorBoundary>
 
       </ScrollView>
 
@@ -335,4 +340,9 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WillCounterScreen;
+// Export with error boundary
+export default withErrorBoundary(WillCounterScreen, {
+  onError: (error) => {
+    console.error('[WillCounterScreen] Error caught by boundary:', error);
+  }
+});

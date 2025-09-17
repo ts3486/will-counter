@@ -6,18 +6,23 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './src/contexts/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import ErrorBoundary from './src/components/shared/ErrorBoundary';
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <AuthProvider>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <StatusBar style="dark" backgroundColor="#f8f9fa" />
-            <AppNavigator />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </AuthProvider>
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <AuthProvider>
+          <SafeAreaProvider>
+            <ErrorBoundary isolate>
+              <NavigationContainer>
+                <StatusBar style="dark" backgroundColor="#f8f9fa" />
+                <AppNavigator />
+              </NavigationContainer>
+            </ErrorBoundary>
+          </SafeAreaProvider>
+        </AuthProvider>
+      </Provider>
+    </ErrorBoundary>
   );
 }
