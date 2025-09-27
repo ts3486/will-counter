@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -10,15 +10,11 @@ import Animated, {
   runOnJS 
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
+import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
+import { getResponsiveCircleSize, getResponsiveFontSize } from '../../utils/responsive';
 
 // Create animated Circle component
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-const { width: screenWidth } = Dimensions.get('window');
-const CIRCLE_SIZE = Math.min(screenWidth * 0.7, 300);
-const STROKE_WIDTH = 8;
-const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 interface CircularCounterProps {
   count: number;
@@ -37,6 +33,13 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
 }) => {
   const scale = useSharedValue(1);
   const animatedProgress = useSharedValue(0);
+  const dimensions = useResponsiveDimensions();
+
+  // Responsive sizing
+  const CIRCLE_SIZE = getResponsiveCircleSize(dimensions.width, dimensions);
+  const STROKE_WIDTH = dimensions.isTablet ? 10 : 8;
+  const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
   // Calculate progress percentage
   const progressPercentage = Math.min((count || 0) / (dailyGoal || 1), 1);
@@ -124,10 +127,17 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
         
         {/* Counter text */}
         <View style={styles.textContainer}>
-          <Text style={[styles.countText, isGoalReached && styles.goalReachedText]}>
+          <Text style={[
+            styles.countText, 
+            isGoalReached && styles.goalReachedText,
+            { fontSize: getResponsiveFontSize(48, dimensions) }
+          ]}>
             {isLoading ? '...' : (count || 0)}
           </Text>
-          <Text style={styles.goalText}>
+          <Text style={[
+            styles.goalText,
+            { fontSize: getResponsiveFontSize(14, dimensions) }
+          ]}>
             {isLoading ? 'Updating' : `/ ${dailyGoal || 10}`}
           </Text>
         </View>
@@ -147,7 +157,6 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
     backgroundColor: 'transparent',
-    borderRadius: CIRCLE_SIZE / 2,
   },
   textContainer: {
     position: 'absolute',

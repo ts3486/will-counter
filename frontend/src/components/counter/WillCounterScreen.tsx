@@ -20,6 +20,8 @@ import {
   selectError
 } from '../../store/slices/willCounterSlice';
 import CircularCounter from './CircularCounter';
+import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
+import { getResponsivePadding, getMaxContentWidth } from '../../utils/responsive';
 
 // Type definitions
 interface CounterHistoryItem {
@@ -35,6 +37,7 @@ const WillCounterScreen: React.FC = () => {
   const count = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
+  const dimensions = useResponsiveDimensions();
   
   // Local state for UI elements
   const [dailyGoal] = useState<number>(10);
@@ -45,7 +48,7 @@ const WillCounterScreen: React.FC = () => {
   // Load today's count on component mount
   useEffect(() => {
     // Load count immediately for testing (bypassing auth for now)
-    dispatch(fetchTodayCount(''));
+    dispatch(fetchTodayCount('') as any);
   }, [dispatch]);
 
   // Debug count changes
@@ -81,7 +84,7 @@ const WillCounterScreen: React.FC = () => {
   // Increment counter
   const handleIncrement = useCallback((): void => {
     // Backend API will extract user from JWT token
-    dispatch(incrementCount(''));
+    dispatch(incrementCount('') as any);
     triggerHaptic('light');
     
     // Check if daily goal is reached - show modal immediately
@@ -117,9 +120,24 @@ const WillCounterScreen: React.FC = () => {
     );
   }
 
+  const responsivePadding = getResponsivePadding(dimensions);
+  const maxContentWidth = getMaxContentWidth(dimensions);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { 
+            paddingHorizontal: responsivePadding,
+            maxWidth: maxContentWidth,
+            alignSelf: 'center',
+            width: '100%',
+            justifyContent: dimensions.isTablet ? 'center' : 'flex-start',
+            minHeight: dimensions.isTablet ? '100%' : undefined,
+          }
+        ]}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Will Counter</Text>
@@ -129,31 +147,66 @@ const WillCounterScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Circular Counter */}
-        <View style={styles.counterContainer}>
-          <CircularCounter
-            count={count}
-            dailyGoal={dailyGoal}
-            onIncrement={handleIncrement}
-            isGoalReached={count >= dailyGoal}
-            isLoading={isLoading}
-          />
-          <Text style={styles.instructionText}>
-            Tap to track your willpower exercise
-          </Text>
-        </View>
+        {/* Main Content - Responsive Layout */}
+        {dimensions.isTablet && dimensions.isLandscape ? (
+          <View style={styles.tabletLayout}>
+            {/* Left side: Counter */}
+            <View style={styles.counterSection}>
+              <CircularCounter
+                count={count}
+                dailyGoal={dailyGoal}
+                onIncrement={handleIncrement}
+                isGoalReached={count >= dailyGoal}
+                isLoading={isLoading}
+              />
+              <Text style={styles.instructionText}>
+                Tap to track your willpower exercise
+              </Text>
+            </View>
+            
+            {/* Right side: Statistics */}
+            <View style={styles.statsSection}>
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Streak</Text>
+                  <Text style={styles.statValue}>{streak}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Today's Goal</Text>
+                  <Text style={styles.statValue}>{dailyGoal}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <>
+            {/* Circular Counter */}
+            <View style={styles.counterContainer}>
+              <CircularCounter
+                count={count}
+                dailyGoal={dailyGoal}
+                onIncrement={handleIncrement}
+                isGoalReached={count >= dailyGoal}
+                isLoading={isLoading}
+              />
+              <Text style={styles.instructionText}>
+                Tap to track your willpower exercise
+              </Text>
+            </View>
 
-        {/* Statistics */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Streak</Text>
-            <Text style={styles.statValue}>{streak}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Today's Goal</Text>
-            <Text style={styles.statValue}>{dailyGoal}</Text>
-          </View>
-        </View>
+            {/* Statistics */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Streak</Text>
+                <Text style={styles.statValue}>{streak}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Today's Goal</Text>
+                <Text style={styles.statValue}>{dailyGoal}</Text>
+              </View>
+            </View>
+          </>
+        )}
 
       </ScrollView>
 
@@ -203,6 +256,23 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 24,
+  },
+  // Tablet layout styles
+  tabletLayout: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 48,
+    flex: 1,
+  },
+  counterSection: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statsSection: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingTop: 32,
   },
   header: {
     alignItems: 'center',
