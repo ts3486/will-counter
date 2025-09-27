@@ -1,4 +1,5 @@
 module.exports = {
+  owner: "ts3486",
   expo: {
     name: "will-counter",
     slug: "will-counter",
@@ -16,21 +17,14 @@ module.exports = {
     ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.willcounter.app"
-    },
-    android: {
-      adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
-      },
-      package: "com.willcounter.app"
-    },
-    web: {
-      favicon: "./assets/favicon.png"
+      bundleIdentifier: "com.taoshimomura.willcounter",
+      infoPlist: {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     extra: {
       eas: {
-        projectId: "your-project-id"
+        projectId: "5b31fd7e-5f2b-4d59-9044-d0b29823538e"
       }
     },
     scheme: "willcounter",
@@ -42,9 +36,6 @@ module.exports = {
         "expo-build-properties",
         {
           ios: {
-            newArchEnabled: false
-          },
-          android: {
             newArchEnabled: false
           }
         }

@@ -66,6 +66,7 @@ data class RpcIncrementRequest(
 )
 
 class SupabaseClient {
+    private val logger = org.slf4j.LoggerFactory.getLogger(SupabaseClient::class.java)
     private val supabaseUrl = System.getProperty("SUPABASE_URL") ?: System.getenv("SUPABASE_URL")
         ?: throw IllegalStateException("SUPABASE_URL environment variable is required")
     
@@ -398,8 +399,14 @@ class SupabaseClient {
             val response = httpClient.get("$supabaseUrl/rest/v1/") {
                 baseHeaders.forEach { (key, value) -> header(key, value) }
             }
-            response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NotFound
+            val ok = response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NotFound
+            if (!ok) {
+                val body = try { response.bodyAsText() } catch (_: Exception) { "<no body>" }
+                logger.warn("Supabase health check failed: status={}, body={} ", response.status.value, body.take(300))
+            }
+            ok
         } catch (e: Exception) {
+            logger.error("Supabase health check exception: {}", e.message)
             false
         }
     }
