@@ -12,6 +12,7 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
 import { getResponsiveCircleSize, getResponsiveFontSize } from '../../utils/responsive';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Create animated Circle component
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -34,6 +35,7 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
   const scale = useSharedValue(1);
   const animatedProgress = useSharedValue(0);
   const dimensions = useResponsiveDimensions();
+  const { theme } = useTheme();
 
   // Responsive sizing
   const CIRCLE_SIZE = getResponsiveCircleSize(dimensions.width, dimensions);
@@ -95,9 +97,9 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS}
-            stroke="#E2E8F0"
+            stroke={theme.colors.border.light}
             strokeWidth={STROKE_WIDTH}
-            fill="#F8FAFC"
+            fill={theme.colors.surface.secondary}
             fillOpacity={1}
           />
           {/* Inner button circle - subtle depth */}
@@ -105,17 +107,17 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS - 8}
-            stroke="#CBD5E1"
+            stroke={theme.colors.border.medium}
             strokeWidth={2}
-            fill="#FFFFFF"
+            fill={theme.colors.surface.primary}
             fillOpacity={0.9}
           />
-          {/* Progress circle - blue to orange when complete with smooth animation */}
+          {/* Progress circle - green primary color with goal completion state */}
           <AnimatedCircle
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS}
-            stroke={isGoalReached ? "#FF6B35" : "#3B82F6"}
+            stroke={isGoalReached ? theme.colors.status.success : theme.colors.primary}
             strokeWidth={STROKE_WIDTH}
             fill="transparent"
             strokeDasharray={CIRCUMFERENCE}
@@ -129,14 +131,19 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
         <View style={styles.textContainer}>
           <Text style={[
             styles.countText, 
-            isGoalReached && styles.goalReachedText,
-            { fontSize: getResponsiveFontSize(48, dimensions) }
+            { 
+              fontSize: getResponsiveFontSize(48, dimensions),
+              color: isGoalReached ? theme.colors.status.success : theme.colors.text.primary
+            }
           ]}>
             {isLoading ? '...' : (count || 0)}
           </Text>
           <Text style={[
             styles.goalText,
-            { fontSize: getResponsiveFontSize(14, dimensions) }
+            { 
+              fontSize: getResponsiveFontSize(14, dimensions),
+              color: theme.colors.text.secondary
+            }
           ]}>
             {isLoading ? 'Updating' : `/ ${dailyGoal || 10}`}
           </Text>
