@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetCount, selectTodayCount, selectIsLoading } from '../../store/slices/willCounterSlice';
 import { useAuth } from '../../contexts/AuthContext';
+import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
+import { getResponsivePadding, getMaxContentWidth } from '../../utils/responsive';
 
 interface AppPreferences {
   soundEnabled: boolean;
@@ -32,6 +34,7 @@ const SettingsScreen: React.FC = () => {
   const todayCount = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
   const { user, logout, loading: authLoading } = useAuth();
+  const dimensions = useResponsiveDimensions();
   
   const [preferences, setPreferences] = useState<AppPreferences>({
     soundEnabled: true,
@@ -218,213 +221,290 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
+  const responsivePadding = getResponsivePadding(dimensions);
+  const maxContentWidth = getMaxContentWidth(dimensions);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: responsivePadding,
+          maxWidth: maxContentWidth,
+          alignSelf: 'center',
+          width: '100%',
+          justifyContent: dimensions.isTablet ? 'center' : 'flex-start',
+          minHeight: dimensions.isTablet ? '100%' : undefined,
+        }}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Customize your experience</Text>
         </View>
 
-        {/* User Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>User</Text>
-          
-          {/* Profile Picture and Name */}
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <View style={styles.profileImageContainer}>
-                {user?.picture ? (
-                  <Image 
-                    source={{ uri: user.picture }} 
-                    style={styles.profileImage}
-                    onError={() => {}}
-                  />
-                ) : (
-                  <View style={styles.profilePlaceholder}>
-                    <Text style={styles.profilePlaceholderText}>👤</Text>
+        {/* Responsive Layout for Tablet */}
+        {dimensions.isTablet ? (
+          <View style={styles.tabletSectionsContainer}>
+            {/* Left Column */}
+            <View style={styles.settingsColumn}>
+              {/* User Information */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>User</Text>
+                <View style={styles.settingItem}>
+                  <View style={styles.settingLeft}>
+                    <View style={styles.profileImageContainer}>
+                      {user?.picture ? (
+                        <Image 
+                          source={{ uri: user.picture }} 
+                          style={styles.profileImage}
+                          onError={() => {}}
+                        />
+                      ) : (
+                        <View style={styles.profilePlaceholder}>
+                          <Text style={styles.profilePlaceholderText}>👤</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>
+                        {authLoading ? 'Loading...' : (user?.name || user?.email?.split('@')[0] || 'User')}
+                      </Text>
+                      <Text style={styles.settingSubtitle}>
+                        {authLoading ? 'Loading...' : (user?.email || 'No email available')}
+                      </Text>
+                    </View>
                   </View>
+                </View>
+              </View>
+
+              {/* Goal Settings */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Goals</Text>
+                <View style={styles.goalContainer}>
+                  <View style={styles.settingLeft}>
+                    <Text style={{ fontSize: 24, color: "#667eea" }}>🎯</Text>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>Daily Goal</Text>
+                      <Text style={styles.settingSubtitle}>Target willpower exercises per day</Text>
+                    </View>
+                  </View>
+                  <View style={styles.goalSelector}>
+                    <TouchableOpacity
+                      style={styles.goalButton}
+                      onPress={() => updatePreference('dailyGoal', Math.max(1, preferences.dailyGoal - 1))}
+                    >
+                      <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>−</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.goalValue}>{preferences.dailyGoal}</Text>
+                    <TouchableOpacity
+                      style={styles.goalButton}
+                      onPress={() => updatePreference('dailyGoal', Math.min(50, preferences.dailyGoal + 1))}
+                    >
+                      <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              {/* Today's Count */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Today's Count</Text>
+                <View style={styles.settingItem}>
+                  <View style={styles.settingLeft}>
+                    <Text style={{ fontSize: 24, color: "#3B82F6" }}>📊</Text>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>Today's Progress</Text>
+                      <Text style={styles.settingSubtitle}>Current count: {todayCount}</Text>
+                    </View>
+                  </View>
+                </View>
+                {renderActionItem(
+                  'Reset Today\'s Count',
+                  `Current count: ${todayCount} • Reset to 0`,
+                  '🔄',
+                  handleResetCount,
+                  false
                 )}
               </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>
-                  {authLoading ? 'Loading...' : (user?.name || user?.email?.split('@')[0] || 'User')}
-                </Text>
-                <Text style={styles.settingSubtitle}>
-                  {authLoading ? 'Loading...' : (user?.email || 'No email available')}
-                </Text>
+            </View>
+
+            {/* Right Column */}
+            <View style={styles.settingsColumn}>
+              {/* App Information */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>About</Text>
+                {renderActionItem(
+                  'App Version',
+                  'Will Counter v1.0.0',
+                  'ℹ️',
+                  () => {
+                    Alert.alert(
+                      'Will Counter',
+                      'Version 1.0.0\n\nA simple and effective app to track and strengthen your willpower.\n\nBuilt with React Native and Expo.'
+                    );
+                  }
+                )}
+                {renderActionItem(
+                  'Privacy Policy',
+                  'How we protect your data',
+                  '🔒',
+                  () => {
+                    Alert.alert('Privacy Policy', 'Privacy policy coming soon!');
+                  }
+                )}
+                {renderActionItem(
+                  'Rate this App',
+                  'Leave a review on the App Store',
+                  '⭐',
+                  () => {
+                    Alert.alert('Rate App', 'Thank you for considering to rate our app!');
+                  }
+                )}
+              </View>
+
+              {/* Account Management */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Account</Text>
+                {renderActionItem(
+                  'Logout',
+                  'Sign out of your account',
+                  '🚪',
+                  handleLogout,
+                  true
+                )}
               </View>
             </View>
           </View>
-        </View>
-
-        {/* App Preferences */}
-        {/*
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Preferences</Text>
-          
-          {renderSettingItem(
-            'Sound Effects',
-            'Play sounds for button interactions',
-            '🔊',
-            preferences.soundEnabled,
-            (value) => updatePreference('soundEnabled', value)
-          )}
-
-          {renderSettingItem(
-            'Haptic Feedback',
-            'Feel vibrations on button press',
-            '📳',
-            preferences.hapticEnabled,
-            (value) => updatePreference('hapticEnabled', value)
-          )}
-
-          {renderSettingItem(
-            'Push Notifications',
-            'Receive reminder notifications',
-            '🔔',
-            preferences.notifications,
-            (value) => updatePreference('notifications', value)
-          )}
-
-          {renderSettingItem(
-            'Dark Mode',
-            'Use dark theme (coming soon)',
-            '🌙',
-            preferences.darkMode,
-            (value) => updatePreference('darkMode', value)
-          )}
-        </View>
-        */}
-
-        {/* Goal Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Goals</Text>
-          
-          <View style={styles.goalContainer}>
-            <View style={styles.settingLeft}>
-              <Text style={{ fontSize: 24, color: "#667eea" }}>🎯</Text>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>Daily Goal</Text>
-                <Text style={styles.settingSubtitle}>Target willpower exercises per day</Text>
+        ) : (
+          <>
+            {/* Phone Layout - Single Column */}
+            {/* User Information */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>User</Text>
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.profileImageContainer}>
+                    {user?.picture ? (
+                      <Image 
+                        source={{ uri: user.picture }} 
+                        style={styles.profileImage}
+                        onError={() => {}}
+                      />
+                    ) : (
+                      <View style={styles.profilePlaceholder}>
+                        <Text style={styles.profilePlaceholderText}>👤</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>
+                      {authLoading ? 'Loading...' : (user?.name || user?.email?.split('@')[0] || 'User')}
+                    </Text>
+                    <Text style={styles.settingSubtitle}>
+                      {authLoading ? 'Loading...' : (user?.email || 'No email available')}
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
-            <View style={styles.goalSelector}>
-              <TouchableOpacity
-                style={styles.goalButton}
-                onPress={() => updatePreference('dailyGoal', Math.max(1, preferences.dailyGoal - 1))}
-              >
-                <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>−</Text>
-              </TouchableOpacity>
-              <Text style={styles.goalValue}>{preferences.dailyGoal}</Text>
-              <TouchableOpacity
-                style={styles.goalButton}
-                onPress={() => updatePreference('dailyGoal', Math.min(50, preferences.dailyGoal + 1))}
-              >
-                <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
 
-        {/* Data Management */}
-        {/*
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Management</Text>
-          {renderActionItem(
-            "Reset Today's Count",
-            `Current count: ${todayCount} • Reset to 0`,
-            '🔄',
-            handleResetCount,
-            false
-          )}
-          {renderActionItem(
-            'Export Data',
-            'Download your progress data',
-            '💾',
-            () => {
-              Alert.alert('Export Data', 'Data export feature coming soon!');
-            }
-          )}
-          {renderActionItem(
-            'Clear All Data',
-            'Reset all counters and history',
-            '🗑️',
-            handleClearData,
-            true
-          )}
-        </View>
-        */}
-
-        {/* Recent Today's Count */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today's Count</Text>
-          
-          {/* Current count display */}
-          <View style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Text style={{ fontSize: 24, color: "#3B82F6" }}>📊</Text>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>Today's Progress</Text>
-                <Text style={styles.settingSubtitle}>Current count: {todayCount}</Text>
+            {/* Goal Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Goals</Text>
+              <View style={styles.goalContainer}>
+                <View style={styles.settingLeft}>
+                  <Text style={{ fontSize: 24, color: "#667eea" }}>🎯</Text>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Daily Goal</Text>
+                    <Text style={styles.settingSubtitle}>Target willpower exercises per day</Text>
+                  </View>
+                </View>
+                <View style={styles.goalSelector}>
+                  <TouchableOpacity
+                    style={styles.goalButton}
+                    onPress={() => updatePreference('dailyGoal', Math.max(1, preferences.dailyGoal - 1))}
+                  >
+                    <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.goalValue}>{preferences.dailyGoal}</Text>
+                  <TouchableOpacity
+                    style={styles.goalButton}
+                    onPress={() => updatePreference('dailyGoal', Math.min(50, preferences.dailyGoal + 1))}
+                  >
+                    <Text style={{ fontSize: 16, color: "#3B82F6", fontWeight: 'bold' }}>+</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Reset count button */}
-          {renderActionItem(
-            'Reset Today\'s Count',
-            `Current count: ${todayCount} • Reset to 0`,
-            '🔄',
-            handleResetCount,
-            false
-          )}
-        </View>
+            {/* Today's Count */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Today's Count</Text>
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <Text style={{ fontSize: 24, color: "#3B82F6" }}>📊</Text>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Today's Progress</Text>
+                    <Text style={styles.settingSubtitle}>Current count: {todayCount}</Text>
+                  </View>
+                </View>
+              </View>
+              {renderActionItem(
+                'Reset Today\'s Count',
+                `Current count: ${todayCount} • Reset to 0`,
+                '🔄',
+                handleResetCount,
+                false
+              )}
+            </View>
 
-        {/* App Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          {renderActionItem(
-            'App Version',
-            'Will Counter v1.0.0',
-            'ℹ️',
-            () => {
-              Alert.alert(
-                'Will Counter',
-                'Version 1.0.0\n\nA simple and effective app to track and strengthen your willpower.\n\nBuilt with React Native and Expo.'
-              );
-            }
-          )}
-          {renderActionItem(
-            'Privacy Policy',
-            'How we protect your data',
-            '🔒',
-            () => {
-              Alert.alert('Privacy Policy', 'Privacy policy coming soon!');
-            }
-          )}
-          {renderActionItem(
-            'Rate this App',
-            'Leave a review on the App Store',
-            '⭐',
-            () => {
-              Alert.alert('Rate App', 'Thank you for considering to rate our app!');
-            }
-          )}
-        </View>
+            {/* App Information */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>About</Text>
+              {renderActionItem(
+                'App Version',
+                'Will Counter v1.0.0',
+                'ℹ️',
+                () => {
+                  Alert.alert(
+                    'Will Counter',
+                    'Version 1.0.0\n\nA simple and effective app to track and strengthen your willpower.\n\nBuilt with React Native and Expo.'
+                  );
+                }
+              )}
+              {renderActionItem(
+                'Privacy Policy',
+                'How we protect your data',
+                '🔒',
+                () => {
+                  Alert.alert('Privacy Policy', 'Privacy policy coming soon!');
+                }
+              )}
+              {renderActionItem(
+                'Rate this App',
+                'Leave a review on the App Store',
+                '⭐',
+                () => {
+                  Alert.alert('Rate App', 'Thank you for considering to rate our app!');
+                }
+              )}
+            </View>
 
-        {/* Account Management */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          {renderActionItem(
-            'Logout',
-            'Sign out of your account',
-            '🚪',
-            handleLogout,
-            true
-          )}
-        </View>
+            {/* Account Management */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Account</Text>
+              {renderActionItem(
+                'Logout',
+                'Sign out of your account',
+                '🚪',
+                handleLogout,
+                true
+              )}
+            </View>
+          </>
+        )}
 
         {/* Developer Section */}
         {/*
@@ -508,6 +588,15 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 32,
     paddingHorizontal: 24,
+  },
+  // Tablet layout styles
+  tabletSectionsContainer: {
+    flexDirection: 'row',
+    gap: 32,
+    alignItems: 'flex-start',
+  },
+  settingsColumn: {
+    flex: 1,
   },
   sectionTitle: {
     fontSize: 18,
