@@ -86,14 +86,37 @@ fun Application.module() {
             try {
                 val supabaseHealthy = supabaseClient.healthCheck()
                 val dbHealthy = databaseService.testConnection()
-                
-                if (supabaseHealthy && dbHealthy) {
-                    call.respondText("API is running and healthy - All services connected", ContentType.Text.Plain)
+
+                // Treat SQL database as optional for this service. If Supabase is healthy,
+                // return 200 and include the DB status. If Supabase is down, return 503.
+                if (supabaseHealthy) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        mapOf(
+                            "status" to "ok",
+                            "supabase" to "healthy",
+                            "sqlDatabase" to if (dbHealthy) "healthy" else "unavailable"
+                        )
+                    )
                 } else {
-                    call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable - Database connectivity issues")
+                    call.respond(
+                        HttpStatusCode.ServiceUnavailable,
+                        mapOf(
+                            "status" to "degraded",
+                            "supabase" to "unavailable",
+                            "sqlDatabase" to if (dbHealthy) "healthy" else "unavailable"
+                        )
+                    )
                 }
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.ServiceUnavailable, "Service unavailable")
+                call.respond(
+                    HttpStatusCode.ServiceUnavailable,
+                    mapOf(
+                        "status" to "error",
+                        "message" to "Service unavailable",
+                        "error" to (e.message ?: "unknown")
+                    )
+                )
             }
         }
         

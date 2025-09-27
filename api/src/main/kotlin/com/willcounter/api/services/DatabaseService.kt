@@ -162,12 +162,18 @@ class DatabaseService {
         }
     }
     
-    fun testConnection(): Boolean = transaction {
-        try {
-            Users.selectAll().limit(1).count() >= 0
-        } catch (e: Exception) {
-            false
+    fun testConnection(): Boolean = try {
+        transaction {
+            try {
+                Users.selectAll().limit(1).count() >= 0
+            } catch (e: Exception) {
+                false
+            }
         }
+    } catch (e: Exception) {
+        // If Database.connect() has not been called, Exposed will throw here.
+        // Treat as not connected instead of propagating the exception.
+        false
     }
     
     private fun WillCount.toResponse(): WillCountResponse {
