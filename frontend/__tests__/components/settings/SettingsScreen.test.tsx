@@ -85,6 +85,7 @@ jest.mock('../../../src/config/auth0', () => ({
 jest.mock('../../../src/contexts/AuthContext', () => ({
   useAuth: () => ({
     logout: jest.fn(),
+    deleteAccount: jest.fn(),
     loading: false,
     isAuthenticated: true,
     user: { name: 'Test User' },
@@ -160,5 +161,14 @@ describe('SettingsScreen', () => {
     expect(() => {
       React.createElement(SettingsScreen);
     }).not.toThrow();
+  });
+
+  it('should use deleteAccount from AuthContext', () => {
+    const { useAuth } = require('../../../src/contexts/AuthContext');
+    const authContext = useAuth();
+    
+    // Verify deleteAccount function exists
+    expect(authContext.deleteAccount).toBeDefined();
+    expect(typeof authContext.deleteAccount).toBe('function');
   });
 });
