@@ -150,7 +150,7 @@ const WillCounterScreen: React.FC = () => {
           ]}
         >
         {/* Header */}
-        <View style={[styles.header, styles.headerCard, { backgroundColor: headerSurfaceColor }]}>
+        <View style={styles.header}>
           <Text style={[styles.title, { color: headingColor }]}>
             Will Counter
           </Text>
@@ -297,16 +297,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 48,
-  },
-  headerCard: {
-    paddingHorizontal: 24,
-    paddingVertical: 18,
-    borderRadius: 28,
-    shadowColor: 'rgba(16, 20, 24, 0.24)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 6,
   },
   title: {
     fontSize: 28,
