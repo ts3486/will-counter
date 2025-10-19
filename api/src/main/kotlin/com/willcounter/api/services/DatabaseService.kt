@@ -3,6 +3,7 @@ package com.willcounter.api.services
 import com.willcounter.api.models.*
 import com.willcounter.api.dto.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.dao.id.EntityID
 import kotlinx.serialization.json.Json
@@ -174,6 +175,22 @@ class DatabaseService {
         // If Database.connect() has not been called, Exposed will throw here.
         // Treat as not connected instead of propagating the exception.
         false
+    }
+    
+    fun deleteUser(userId: String): Boolean = transaction {
+        try {
+            val userUUID = UUID.fromString(userId)
+            
+            // Delete all will counts for this user first (due to foreign key constraint)
+            WillCounts.deleteWhere { WillCounts.userId eq userUUID }
+            
+            // Delete the user
+            val deleted = Users.deleteWhere { Users.id eq userUUID }
+            
+            deleted > 0
+        } catch (e: Exception) {
+            false
+        }
     }
     
     private fun WillCount.toResponse(): WillCountResponse {

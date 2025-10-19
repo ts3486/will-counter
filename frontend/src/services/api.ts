@@ -154,6 +154,25 @@ export const apiService = {
   // User creation is now handled securely by the backend API
   // No need for client-side UUID generation or user management
 
+  async deleteUser() {
+    // Use secure backend API to delete user account
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/api/will-counts/users/me`, {
+      method: 'DELETE',
+      headers,
+    });
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in to continue.');
+      }
+      const errorText = await response.text();
+      throw new Error(`Failed to delete user account: ${response.status} - ${errorText}`);
+    }
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+    return result;
+  },
+
   // Helper method to get current user info from stored Auth0 data
   async getCurrentUser(): Promise<any | null> {
     try {

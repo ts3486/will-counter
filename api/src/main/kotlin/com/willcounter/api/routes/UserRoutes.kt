@@ -92,6 +92,48 @@ fun Route.userRoutes(databaseService: DatabaseService) {
                     ))
                 }
             }
+            
+            delete("/me") {
+                try {
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        call.respond(HttpStatusCode.Unauthorized, ApiResponse<Any>(
+                            success = false,
+                            error = "Authentication required"
+                        ))
+                        return@delete
+                    }
+                    
+                    // Get user to find their UUID
+                    val user = databaseService.getUserByAuth0Id(auth0Id)
+                    if (user == null) {
+                        call.respond(HttpStatusCode.NotFound, ApiResponse<Any>(
+                            success = false,
+                            error = "User not found"
+                        ))
+                        return@delete
+                    }
+                    
+                    // Delete the user and all associated data
+                    val deleted = databaseService.deleteUser(user.id)
+                    if (deleted) {
+                        call.respond(HttpStatusCode.OK, ApiResponse<Nothing>(
+                            success = true,
+                            message = "User account deleted successfully"
+                        ))
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                            success = false,
+                            error = "Failed to delete user account"
+                        ))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ApiResponse<Any>(
+                        success = false,
+                        error = "Failed to delete user: ${e.message}"
+                    ))
+                }
+            }
         }
         
         get("/{auth0Id}") {
