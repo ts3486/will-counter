@@ -44,40 +44,40 @@ export interface AppTheme {
 
 export const theme: AppTheme = {
   colors: {
-    // Primary sprout green
-    primary: '#4CAF50',
+    // Primary accent color - dark green for good contrast on light green backgrounds
+    primary: '#2E7D32',
     
-    // Background gradient colors
+    // Green background colors - using your specified color codes
     background: {
-      top: '#E6F8D9',     // Gradient top
-      bottom: '#CDECB0',   // Gradient bottom
-      mid: '#DAF2C4',      // Average mid-tone
+      top: '#E6F8D9',        // Background Top (gradient)
+      bottom: '#CDECB0',     // Background Bottom (gradient)  
+      mid: '#DAF2C4',        // Background Mid (average)
     },
     
-    // Text colors
+    // Text colors optimized for green backgrounds
     text: {
-      primary: '#1B5E20',    // Dark green for primary text
-      secondary: '#2E7D32',  // Medium green for secondary text
-      light: '#66BB6A',      // Light green for muted text
+      primary: '#1B5E20',       // Dark green for primary text - excellent contrast
+      secondary: '#2E7D32',     // Medium dark green for secondary text
+      light: '#4CAF50',         // Primary green for muted text
     },
     
-    // Surface colors
+    // Surface colors for green background theme
     surface: {
-      primary: '#FFFFFF',     // White surface
-      secondary: '#F1F8E9',   // Very light green surface
-      elevated: '#E8F5E8',    // Light green elevated surface
+      primary: '#FFFFFF',                    // Pure white for cards/modals
+      secondary: 'rgba(255, 255, 255, 0.9)', // Semi-transparent white
+      elevated: 'rgba(255, 255, 255, 0.95)', // More opaque white for elevation
     },
     
-    // Border colors
+    // Border colors using green tones
     border: {
-      light: '#C8E6C9',      // Light green border
-      medium: '#A5D6A7',     // Medium green border
+      light: 'rgba(46, 125, 50, 0.2)',      // Light green border
+      medium: 'rgba(46, 125, 50, 0.3)',     // Medium green border
     },
     
     // Status colors
     status: {
       success: '#4CAF50',    // Primary green for success
-      warning: '#FF9800',    // Orange for warnings
+      warning: '#FF9800',    // Orange for warnings  
       error: '#F44336',      // Red for errors
     },
   },

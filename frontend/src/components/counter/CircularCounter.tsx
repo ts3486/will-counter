@@ -92,32 +92,32 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
     >
       <Animated.View style={[styles.circleContainer, circleStyle, isLoading && styles.loadingContainer]}>
         <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
-          {/* Background circle - calm foundation */}
+          {/* Background circle - white foundation for contrast on green */}
           <Circle
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS}
-            stroke={theme.colors.border.light}
+            stroke="rgba(255, 255, 255, 0.3)"
             strokeWidth={STROKE_WIDTH}
-            fill={theme.colors.surface.secondary}
+            fill="rgba(255, 255, 255, 0.9)"
             fillOpacity={1}
           />
-          {/* Inner button circle - subtle depth */}
+          {/* Inner button circle - clean white surface */}
           <Circle
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS - 8}
-            stroke={theme.colors.border.medium}
+            stroke="rgba(255, 255, 255, 0.5)"
             strokeWidth={2}
-            fill={theme.colors.surface.primary}
-            fillOpacity={0.9}
+            fill="#FFFFFF"
+            fillOpacity={1}
           />
-          {/* Progress circle - green primary color with goal completion state */}
+          {/* Progress circle - dark green for visibility on light green background */}
           <AnimatedCircle
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={RADIUS}
-            stroke={isGoalReached ? theme.colors.status.success : theme.colors.primary}
+            stroke={isGoalReached ? '#1B5E20' : theme.colors.primary}
             strokeWidth={STROKE_WIDTH}
             fill="transparent"
             strokeDasharray={CIRCUMFERENCE}
@@ -133,7 +133,7 @@ const CircularCounter: React.FC<CircularCounterProps> = ({
             styles.countText, 
             { 
               fontSize: getResponsiveFontSize(48, dimensions),
-              color: isGoalReached ? theme.colors.status.success : theme.colors.text.primary
+              color: isGoalReached ? '#1B5E20' : theme.colors.text.primary
             }
           ]}>
             {isLoading ? '...' : (count || 0)}

@@ -19,6 +19,8 @@ const Tab = createBottomTabNavigator<TabParamList>();
 const TabNavigator = () => {
   const dimensions = useResponsiveDimensions();
   const { theme } = useTheme();
+  const navLabelColor = '#101418';
+  const navLabelMuted = 'rgba(16, 20, 24, 0.6)';
   
   // Responsive tab bar dimensions
   const tabBarHeight = dimensions.isTablet ? 100 : 84;
@@ -30,8 +32,8 @@ const TabNavigator = () => {
       id={undefined}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.text.secondary,
+        tabBarActiveTintColor: navLabelColor,
+        tabBarInactiveTintColor: navLabelMuted,
         tabBarStyle: {
           backgroundColor: theme.colors.surface.primary,
           borderTopWidth: 1,

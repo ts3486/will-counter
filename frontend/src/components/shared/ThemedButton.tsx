@@ -68,7 +68,12 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
         baseStyle.borderColor = theme.colors.primary;
         break;
       default: // primary
-        baseStyle.backgroundColor = theme.colors.primary;
+        baseStyle.backgroundColor = '#FFFFFF';
+        baseStyle.shadowColor = 'rgba(46, 125, 50, 0.3)';
+        baseStyle.shadowOffset = { width: 0, height: 2 };
+        baseStyle.shadowOpacity = 1;
+        baseStyle.shadowRadius = 4;
+        baseStyle.elevation = 4;
     }
 
     // Disabled state
@@ -106,7 +111,8 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
         baseTextStyle.color = theme.colors.primary;
         break;
       default: // primary
-        baseTextStyle.color = '#FFFFFF';
+        baseTextStyle.color = theme.colors.primary;
+        baseTextStyle.fontWeight = '700';
     }
 
     return baseTextStyle;
@@ -121,7 +127,7 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator 
-          color={variant === 'primary' ? '#FFFFFF' : theme.colors.primary} 
+          color={theme.colors.primary} 
           size="small" 
         />
       ) : (
