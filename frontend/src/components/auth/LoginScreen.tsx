@@ -2,17 +2,22 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import GradientBackground from '../shared/GradientBackground';
+import ThemedButton from '../shared/ThemedButton';
+
+const appSplash = require('../../../assets/splash.png');
 
 const LoginScreen: React.FC = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { theme } = useTheme();
 
   const handleLogin = async () => {
     try {
@@ -26,105 +31,100 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Will Counter</Text>
-          <Text style={styles.subtitle}>
-            Strengthen your willpower, one count at a time
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: theme.colors.text.primary }]}>Will Counter</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
+              Strengthen your willpower daily
+            </Text>
+          </View>
+
+          <Image source={appSplash} style={styles.logo} />
+
+          <View style={styles.buttonWrapper}>
+            <ThemedButton
+              title="Login"
+              onPress={handleLogin}
+              loading={loading}
+              size="large"
+              disabled={loading}
+              style={[
+                styles.loginButton,
+                {
+                  backgroundColor: theme.colors.primary,
+                  shadowColor: 'rgba(27, 94, 32, 0.35)',
+                },
+              ]}
+              textStyle={styles.loginButtonText}
+            />
+          </View>
+
+          <Text style={[styles.footer, { color: theme.colors.text.secondary }]}>
+            Track. Improve. Celebrate.
           </Text>
         </View>
-
-        <View style={styles.features}>
-          <Text style={styles.featureText}>✓ Track your willpower exercises</Text>
-          <Text style={styles.featureText}>✓ View daily statistics</Text>
-          <Text style={styles.featureText}>✓ Secure data with Auth0</Text>
-          <Text style={styles.featureText}>✓ Offline support</Text>
-        </View>
-
-        <View style={styles.loginSection}>
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
-            )}
-          </TouchableOpacity>
-          
-          <Text style={styles.privacyText}>
-            By signing in, you agree to our privacy policy and terms of service.
-          </Text>
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 32,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 24,
+  },
+  logo: {
+    width: 160,
+    height: 160,
+    resizeMode: 'contain',
+    marginBottom: 32,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#2D3436',
-    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#636E72',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
+    marginTop: 8,
   },
-  features: {
-    marginBottom: 48,
-  },
-  featureText: {
-    fontSize: 16,
-    color: '#2D3436',
-    marginBottom: 12,
-    paddingLeft: 8,
-  },
-  loginSection: {
-    alignItems: 'center',
+  buttonWrapper: {
+    width: '100%',
+    maxWidth: 320,
+    marginBottom: 20,
   },
   loginButton: {
-    backgroundColor: '#6C5CE7',
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 8,
-    marginBottom: 16,
-    minWidth: 200,
-    alignItems: 'center',
-  },
-  loginButtonDisabled: {
-    opacity: 0.6,
+    width: '100%',
+    borderRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 10,
   },
   loginButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
   },
-  privacyText: {
-    fontSize: 12,
-    color: '#636E72',
+  footer: {
+    marginTop: 12,
+    fontSize: 14,
     textAlign: 'center',
-    lineHeight: 16,
-    maxWidth: 280,
+    letterSpacing: 0.4,
   },
 });
 
