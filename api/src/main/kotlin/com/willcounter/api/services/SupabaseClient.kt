@@ -166,6 +166,46 @@ class SupabaseClient {
     }
 
     /**
+     * Delete a user and related will count records from Supabase by Auth0 ID
+     */
+    suspend fun deleteUserAccount(auth0Id: String): Boolean {
+        try {
+            val userUuid = getUserByAuth0Id(auth0Id) ?: return false
+
+            // Delete will count records first to satisfy foreign key constraints
+            val deleteCountsResponse = httpClient.delete("$supabaseUrl/rest/v1/will_counts") {
+                baseHeaders.forEach { (key, value) -> header(key, value) }
+                header("Prefer", "return=minimal")
+                parameter("user_id", "eq.$userUuid")
+            }
+
+            if (deleteCountsResponse.status != HttpStatusCode.NoContent &&
+                deleteCountsResponse.status != HttpStatusCode.OK) {
+                throw RuntimeException("Failed to delete will counts for user: $userUuid (status ${deleteCountsResponse.status})")
+            }
+
+            // Delete the user record
+            val deleteUserResponse = httpClient.delete("$supabaseUrl/rest/v1/users") {
+                baseHeaders.forEach { (key, value) -> header(key, value) }
+                header("Prefer", "return=minimal")
+                parameter("id", "eq.$userUuid")
+            }
+
+            if (deleteUserResponse.status != HttpStatusCode.NoContent &&
+                deleteUserResponse.status != HttpStatusCode.OK) {
+                throw RuntimeException("Failed to delete user: $userUuid (status ${deleteUserResponse.status})")
+            }
+
+            // Clean up any fallback records cached for this user
+            fallbackStorage.entries.removeIf { it.value.user_id == userUuid }
+
+            return true
+        } catch (e: Exception) {
+            throw RuntimeException("Database unavailable: Failed to delete user for auth0_id: $auth0Id", e)
+        }
+    }
+
+    /**
      * Get or create today's will count record
      */
     suspend fun getTodayCount(userUuid: String): SupabaseWillCount {

@@ -54,6 +54,41 @@ fun Route.secureWillCountRoutes(supabaseClient: SupabaseClient) {
                     ))
                 }
             }
+
+            /**
+             * DELETE /api/will-counts/users/me
+             * Deletes the authenticated user's account and related data
+             */
+            delete("/users/me") {
+                try {
+                    val principal = call.principal<Auth0Principal>()
+                    val auth0Id = principal?.userId ?: run {
+                        call.respond(HttpStatusCode.Unauthorized, mapOf(
+                            "success" to false,
+                            "error" to "Authentication required"
+                        ))
+                        return@delete
+                    }
+
+                    val deleted = supabaseClient.deleteUserAccount(auth0Id)
+                    if (deleted) {
+                        call.respond(HttpStatusCode.OK, mapOf(
+                            "success" to true,
+                            "message" to "User account deleted successfully"
+                        ))
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, mapOf(
+                            "success" to false,
+                            "error" to "User not found"
+                        ))
+                    }
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, mapOf(
+                        "success" to false,
+                        "error" to "Failed to delete user account: ${e.message}"
+                    ))
+                }
+            }
             
             /**
              * GET /api/will-counts/today

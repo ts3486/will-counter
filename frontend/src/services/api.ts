@@ -157,7 +157,7 @@ export const apiService = {
   async deleteUser() {
     // Use secure backend API to delete user account
     const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/will-counts/users/me`, {
       method: 'DELETE',
       headers,
     });
