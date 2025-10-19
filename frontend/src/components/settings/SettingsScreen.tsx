@@ -33,7 +33,7 @@ const SettingsScreen: React.FC = () => {
   const dispatch = useDispatch();
   const todayCount = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
-  const { user, logout, loading: authLoading } = useAuth();
+  const { user, logout, deleteAccount, loading: authLoading } = useAuth();
   const dimensions = useResponsiveDimensions();
   
   const [preferences, setPreferences] = useState<AppPreferences>({
@@ -124,6 +124,27 @@ const SettingsScreen: React.FC = () => {
               await logout();
             } catch (error) {
               Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This will permanently delete all your data including will counts and progress. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
             }
           },
         },
@@ -374,6 +395,13 @@ const SettingsScreen: React.FC = () => {
                   handleLogout,
                   true
                 )}
+                {renderActionItem(
+                  'Delete Account',
+                  'Permanently delete your account and data',
+                  '🗑️',
+                  handleDeleteAccount,
+                  true
+                )}
               </View>
             </View>
           </View>
@@ -500,6 +528,13 @@ const SettingsScreen: React.FC = () => {
                 'Sign out of your account',
                 '🚪',
                 handleLogout,
+                true
+              )}
+              {renderActionItem(
+                'Delete Account',
+                'Permanently delete your account and data',
+                '🗑️',
+                handleDeleteAccount,
                 true
               )}
             </View>

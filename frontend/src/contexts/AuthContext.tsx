@@ -15,6 +15,7 @@ interface AuthContextType {
   user: any | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
   loading: boolean;
 }
@@ -166,6 +167,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      setLoading(true);
+      
+      // Import API service
+      const { apiService } = await import('../services/api');
+      
+      // Call backend API to delete user account
+      await apiService.deleteUser();
+      
+      // Clear secure storage
+      await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('refreshToken');
+      await SecureStore.deleteItemAsync('userInfo');
+      
+      // Clear AsyncStorage data
+      await AsyncStorage.multiRemove(['@will_counter_data', '@will_counter_preferences']);
+      
+      // Update authentication state
+      setIsAuthenticated(false);
+      setUserState(null);
+      dispatch(clearUser());
+      
+      // Show success message
+      Alert.alert('Success', 'Your account has been deleted successfully.');
+    } catch (error) {
+      // Account deletion failed
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getAccessToken = async (): Promise<string | null> => {
     try {
       const accessToken = await SecureStore.getItemAsync('accessToken');
@@ -181,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       login, 
       logout, 
+      deleteAccount,
       getAccessToken,
       loading 
     }}>
