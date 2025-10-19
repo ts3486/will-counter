@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { useResponsiveDimensions } from '../hooks/useResponsiveDimensions';
 import { getResponsiveFontSize } from '../utils/responsive';
+import { useTheme } from '../contexts/ThemeContext';
 
 import WillCounterScreen from '../components/counter/WillCounterScreen';
 // import StatisticsScreen from '../components/statistics/StatisticsScreen'; // Removed Statistics page
@@ -17,6 +18,9 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 const TabNavigator = () => {
   const dimensions = useResponsiveDimensions();
+  const { theme } = useTheme();
+  const navLabelColor = '#101418';
+  const navLabelMuted = 'rgba(16, 20, 24, 0.6)';
   
   // Responsive tab bar dimensions
   const tabBarHeight = dimensions.isTablet ? 100 : 84;
@@ -28,17 +32,17 @@ const TabNavigator = () => {
       id={undefined}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: navLabelColor,
+        tabBarInactiveTintColor: navLabelMuted,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: theme.colors.surface.primary,
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
+          borderTopColor: theme.colors.border.light,
           paddingBottom: dimensions.isTablet ? 12 : 8,
           paddingTop: dimensions.isTablet ? 12 : 8,
           height: tabBarHeight,
           elevation: 8,
-          shadowColor: '#0F172A',
+          shadowColor: theme.colors.text.primary,
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.06,
           shadowRadius: 8,

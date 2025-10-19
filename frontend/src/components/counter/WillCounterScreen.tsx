@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   fetchTodayCount,
   incrementCount,
@@ -22,6 +23,8 @@ import {
 import CircularCounter from './CircularCounter';
 import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
 import { getResponsivePadding, getMaxContentWidth } from '../../utils/responsive';
+import GradientBackground from '../shared/GradientBackground';
+import ThemedButton from '../shared/ThemedButton';
 
 // Type definitions
 interface CounterHistoryItem {
@@ -38,7 +41,10 @@ const WillCounterScreen: React.FC = () => {
   const isLoading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
   const dimensions = useResponsiveDimensions();
-  
+  const { theme } = useTheme();
+  const headingColor = '#101418';
+  const headerSurfaceColor = 'rgba(255, 255, 255, 0.86)';
+
   // Local state for UI elements
   const [dailyGoal] = useState<number>(10);
   const [streak, setStreak] = useState<number>(0);
@@ -112,11 +118,15 @@ const WillCounterScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <Text style={[styles.loadingText, { color: theme.colors.text.primary }]}>
+              Loading...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
@@ -124,26 +134,33 @@ const WillCounterScreen: React.FC = () => {
   const maxContentWidth = getMaxContentWidth(dimensions);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent, 
-          { 
-            paddingHorizontal: responsivePadding,
-            maxWidth: maxContentWidth,
-            alignSelf: 'center',
-            width: '100%',
-            justifyContent: dimensions.isTablet ? 'center' : 'flex-start',
-            minHeight: dimensions.isTablet ? '100%' : undefined,
-          }
-        ]}
-      >
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <ScrollView 
+          contentContainerStyle={[
+            styles.scrollContent, 
+            { 
+              paddingHorizontal: responsivePadding,
+              maxWidth: maxContentWidth,
+              alignSelf: 'center',
+              width: '100%',
+              justifyContent: dimensions.isTablet ? 'center' : 'flex-start',
+              minHeight: dimensions.isTablet ? '100%' : undefined,
+            }
+          ]}
+        >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Will Counter</Text>
-          <Text style={styles.subtitle}>Tap the circle to increment</Text>
+          <Text style={[styles.title, { color: headingColor }]}>
+            Will Counter
+          </Text>
           {error && (
-            <Text style={styles.errorText}>Error: {error}</Text>
+            <Text style={[styles.errorText, { 
+              color: theme.colors.status.error,
+              backgroundColor: theme.colors.surface.elevated 
+            }]}>
+              Error: {error}
+            </Text>
           )}
         </View>
 
@@ -159,21 +176,20 @@ const WillCounterScreen: React.FC = () => {
                 isGoalReached={count >= dailyGoal}
                 isLoading={isLoading}
               />
-              <Text style={styles.instructionText}>
-                Tap to track your willpower exercise
+              <Text style={[styles.instructionText, { color: theme.colors.text.secondary }]}>
+                Tap the circle to increment
               </Text>
             </View>
-            
             {/* Right side: Statistics */}
             <View style={styles.statsSection}>
-              <View style={styles.statsContainer}>
+              <View style={[styles.statsContainer, { backgroundColor: theme.colors.surface.elevated }]}>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Streak</Text>
-                  <Text style={styles.statValue}>{streak}</Text>
+                  <Text style={[styles.statLabel, { color: headingColor }]}>Streak</Text>
+                  <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>{streak}</Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Today's Goal</Text>
-                  <Text style={styles.statValue}>{dailyGoal}</Text>
+                  <Text style={[styles.statLabel, { color: headingColor }]}>Today's Goal</Text>
+                  <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>{dailyGoal}</Text>
                 </View>
               </View>
             </View>
@@ -189,26 +205,27 @@ const WillCounterScreen: React.FC = () => {
                 isGoalReached={count >= dailyGoal}
                 isLoading={isLoading}
               />
-              <Text style={styles.instructionText}>
-                Tap to track your willpower exercise
+              <Text style={[styles.instructionText, { color: theme.colors.text.secondary }]}>
+                Tap the circle to increment
               </Text>
             </View>
 
             {/* Statistics */}
-            <View style={styles.statsContainer}>
+            <View style={[styles.statsContainer, { backgroundColor: theme.colors.surface.elevated }]}>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Streak</Text>
-                <Text style={styles.statValue}>{streak}</Text>
+                <Text style={[styles.statLabel, { color: headingColor }]}>Streak</Text>
+                <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>{streak}</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Today's Goal</Text>
-                <Text style={styles.statValue}>{dailyGoal}</Text>
+                <Text style={[styles.statLabel, { color: headingColor }]}>Today's Goal</Text>
+                <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>{dailyGoal}</Text>
               </View>
             </View>
           </>
         )}
 
       </ScrollView>
+      </SafeAreaView>
 
       {/* Goal Achievement Modal */}
       <Modal
@@ -219,21 +236,24 @@ const WillCounterScreen: React.FC = () => {
         testID="goal-modal"
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: theme.colors.surface.primary }]}>
             <Text style={styles.celebrationEmoji}>🎉</Text>
-            <Text style={styles.congratsTitle}>Congratulations!</Text>
-            <Text style={styles.congratsMessage}>You reached your goal!</Text>
-            <TouchableOpacity 
-              style={styles.dismissButton}
+            <Text style={[styles.congratsTitle, { color: theme.colors.text.primary }]}>
+              Congratulations!
+            </Text>
+            <Text style={[styles.congratsMessage, { color: theme.colors.text.secondary }]}>
+              You reached your goal!
+            </Text>
+            <ThemedButton
+              title="Awesome!"
               onPress={handleModalDismiss}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.dismissButtonText}>Awesome!</Text>
-            </TouchableOpacity>
+              variant="primary"
+              size="medium"
+            />
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </GradientBackground>
   );
 };
 
@@ -277,12 +297,10 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 48,
-    paddingTop: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#0F172A',
     marginBottom: 8,
     letterSpacing: -0.5,
   },
@@ -302,15 +320,16 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 24,
     marginHorizontal: 8,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: 'rgba(16, 20, 24, 0.2)',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 20, 24, 0.08)',
   },
   statItem: {
     alignItems: 'center',
@@ -318,7 +337,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 13,
-    color: '#64748B',
     marginBottom: 6,
     fontWeight: '500',
     textTransform: 'uppercase',
@@ -327,16 +345,18 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#0F172A',
     letterSpacing: -1,
   },
   instructionText: {
     fontSize: 15,
-    color: '#64748B',
     marginTop: 20,
     textAlign: 'center',
     fontWeight: '500',
     fontStyle: 'italic',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.86)',
   },
   errorText: {
     fontSize: 13,
