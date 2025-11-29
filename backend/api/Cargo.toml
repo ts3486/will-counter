@@ -1,0 +1,32 @@
+[package]
+name = "will-counter-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros", "json"] }
+axum-extra = { version = "0.9", features = ["typed-header"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.37", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = "9"
+once_cell = "1.19"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+utoipa = { version = "4", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-swagger-ui = { version = "7", features = ["axum", "reqwest"] }
+uuid = { version = "1.8", features = ["serde", "v4"] }
+anyhow = "1.0"
+parking_lot = "0.12"
+base64 = "0.22"
+urlencoding = "2.1"
+dotenvy = "0.15"
+
+[profile.release]
+lto = true
+codegen-units = 1
