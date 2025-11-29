@@ -8,10 +8,10 @@
 cd backend/api && cargo run
 
 # Start frontend development server
-cd frontend && npm start
+cd frontend && pnpm start
 
 # Run tests
-cd frontend && npm test
+cd frontend && pnpm test
 ```
 
 ### Authentication Testing

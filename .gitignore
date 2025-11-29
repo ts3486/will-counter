@@ -128,8 +128,8 @@ expo-env.d.ts
 dist/
 build/
 *.log
-backend/axum/target/
-backend/axum/target-debug/
+backend/api/target/
+backend/api/target-debug/
 
 # IDE and editor files
 .vscode/

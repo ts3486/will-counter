@@ -61,7 +61,7 @@ will-counter/
    # Backend
    cd backend/api && cargo fetch
    # Frontend
-   cd ../../frontend && npm install
+   cd ../../frontend && pnpm install
    ```
 
 2. **Set up environment variables:**
@@ -87,10 +87,10 @@ will-counter/
    cd backend/api && cargo run
    
    # Terminal 2 - Start React Native Metro
-   cd frontend && npm start
+   cd frontend && pnpm start
    
    # Terminal 3 - Run on device/simulator
-   npm run android  # or npm run ios (from frontend/)
+   pnpm run android  # or pnpm run ios (from frontend/)
    ```
 
 ## Configuration
@@ -257,11 +257,11 @@ cd backend/api && cargo run                 # Start Rust Axum API server
 cd backend/api && cargo build --release     # Build Rust API binary
 
 # Frontend
-cd frontend && npm start                     # Start React Native Metro
-cd frontend && npm run android               # Run Android app
-cd frontend && npm run ios                   # Run iOS app
-cd frontend && npm test                      # Run tests
-cd frontend && npm run lint                  # Lint
+cd frontend && pnpm start                    # Start React Native Metro
+cd frontend && pnpm run android              # Run Android app
+cd frontend && pnpm run ios                  # Run iOS app
+cd frontend && pnpm test                     # Run tests
+cd frontend && pnpm run lint                 # Lint
 ```
 
 ## Contributing
