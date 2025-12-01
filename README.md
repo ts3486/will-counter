@@ -1,6 +1,6 @@
 # Will Counter
 
-A mobile application for tracking and strengthening willpower through conscious resistance tracking. Built as a monorepo with React Native frontend, Kotlin API backend, and Supabase database.
+A mobile application for tracking and strengthening willpower through conscious resistance tracking. Built as a monorepo with React Native frontend, Rust (Axum) API backend, and Supabase database.
 
 ## Features
 
@@ -24,9 +24,8 @@ A mobile application for tracking and strengthening willpower through conscious 
 
 ```
 will-counter/
-├── api/                     # Kotlin API backend (Ktor)
-│   ├── src/main/kotlin/     # Application source code
-│   └── build.gradle.kts     # Build configuration
+├── backend/                 # Rust Axum API backend (Cargo project + Dockerfile)
+│   └── api/                 # Axum service source
 ├── frontend/                # React Native mobile app
 │   ├── src/
 │   │   ├── components/      # React components
@@ -59,7 +58,10 @@ will-counter/
    ```bash
    git clone <repository-url>
    cd will-counter
-   npm run install:all
+   # Backend
+   cd backend/api && cargo fetch
+   # Frontend
+   cd ../../frontend && pnpm install
    ```
 
 2. **Set up environment variables:**
@@ -81,14 +83,14 @@ will-counter/
 
 5. **Start development servers:**
    ```bash
-   # Terminal 1 - Start API (optional, using Supabase instead)
-   npm run dev:api
+   # Terminal 1 - Start API (Axum)
+   cd backend/api && cargo run
    
    # Terminal 2 - Start React Native Metro
-   npm run dev:frontend
+   cd frontend && pnpm start
    
    # Terminal 3 - Run on device/simulator
-   npm run android  # or npm run ios
+   pnpm run android  # or pnpm run ios (from frontend/)
    ```
 
 ## Configuration
@@ -250,25 +252,16 @@ npm run build:ios
 ## Scripts Reference
 
 ```bash
-# Development
-npm run dev:api              # Start Kotlin API server
-npm run dev:frontend         # Start React Native Metro
-npm run android             # Run Android app
-npm run ios                 # Run iOS app
+# Backend
+cd backend/api && cargo run                 # Start Rust Axum API server
+cd backend/api && cargo build --release     # Build Rust API binary
 
-# Building
-npm run build:api           # Build Kotlin API
-npm run build:android       # Build Android APK/Bundle
-npm run build:ios           # Build iOS archive
-
-# Testing
-npm run test                # Run all tests
-npm run test:watch          # Run tests in watch mode
-npm run lint                # Lint all packages
-
-# Utilities
-npm run clean               # Clean all build artifacts
-npm run install:all         # Install all dependencies
+# Frontend
+cd frontend && pnpm start                    # Start React Native Metro
+cd frontend && pnpm run android              # Run Android app
+cd frontend && pnpm run ios                  # Run iOS app
+cd frontend && pnpm test                     # Run tests
+cd frontend && pnpm run lint                 # Lint
 ```
 
 ## Contributing

@@ -5,13 +5,13 @@
 ### Development Server Commands
 ```bash
 # Start backend server
-cd api && ./gradlew run
+cd backend/api && cargo run
 
 # Start frontend development server
-cd frontend && npm start
+cd frontend && pnpm start
 
 # Run tests
-cd frontend && npm test
+cd frontend && pnpm test
 ```
 
 ### Authentication Testing
@@ -30,21 +30,21 @@ echo "Audience: $AUTH0_AUDIENCE"
 cd frontend && npm audit
 
 # Check for vulnerabilities
-cd api && ./gradlew dependencyCheck
+cd frontend && npm audit --production
 ```
 
 ## Key File Locations
 
 ### Configuration Files
-- Backend env: `api/.env`
+- Backend env: `backend/api/.env`
 - Frontend env: `frontend/.env` 
 - Auth0 config: `frontend/src/config/auth0.ts`
 - Supabase config: `frontend/src/config/supabase.ts`
 
 ### Critical Security Files
-- JWT validation: `api/src/main/kotlin/com/willcounter/api/config/Auth0Config.kt`
-- Environment loading: `api/build.gradle.kts`
-- API routes: `api/src/main/kotlin/com/willcounter/api/routes/`
+- JWT validation: `backend/api/src/auth.rs`
+- Environment loading: `backend/api/src/config.rs`
+- API routes: `backend/api/src/routes.rs`
 
 ## Recent Fixes Applied
 
@@ -67,7 +67,6 @@ SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 AUTH0_DOMAIN=
 AUTH0_AUDIENCE=
-DATABASE_URL=
 ```
 
 ### Frontend (.env in frontend/)
@@ -100,17 +99,17 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=
 ```bash
 # 1. Remove all debug logging and print statements
 # Search for debug patterns in the codebase:
-grep -r "println\|console\.log\|print(" api/ frontend/ --include="*.kt" --include="*.ts" --include="*.js"
+grep -r "println\|console\.log\|print(" backend/ frontend/ --include="*.rs" --include="*.ts" --include="*.js"
 
 # 2. Remove temporary test endpoints and routes
 # Look for test endpoints like /test-fix, /debug, /temp
-grep -r "/test-\|/debug\|/temp" api/src/ --include="*.kt"
+grep -r "/test-\|/debug-\|/temp" backend/ frontend/ --include="*.rs" --include="*.ts" --include="*.js"
 
 # 3. Clean up temporary files
 find . -name "*.tmp" -o -name "*.temp" -o -name "debug-*" -delete
 
 # 4. Kill any background processes and free ports
-pkill -f "gradlew run" || true
+pkill -f "cargo run" || true
 pkill -f "npm start" || true
 lsof -ti:8080 | xargs kill -9 2>/dev/null || true
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
