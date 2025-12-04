@@ -11,7 +11,10 @@ pub struct Config {
 
 impl Config {
     pub fn from_env() -> anyhow::Result<Self> {
-        let port = env::var("PORT").ok().and_then(|v| v.parse().ok()).unwrap_or(8080);
+        let port = env::var("PORT")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(8080);
         let supabase_url = env::var("SUPABASE_URL")?;
         let supabase_service_role_key = env::var("SUPABASE_SERVICE_ROLE_KEY")?;
         let auth0_domain = env::var("AUTH0_DOMAIN")?;

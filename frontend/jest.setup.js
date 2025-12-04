@@ -52,6 +52,11 @@ jest.mock('react-native-svg', () => ({
   Circle: ({ children, ...props }: any) => ({ ...props, children }),
 }));
 
+// Mock expo-linear-gradient
+jest.mock('expo-linear-gradient', () => ({
+  LinearGradient: ({ children }: any) => children,
+}));
+
 // Mock React Navigation
 jest.mock('@react-navigation/native', () => {
   const actualNav = jest.requireActual('@react-navigation/native');
