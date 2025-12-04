@@ -13,23 +13,28 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    
+
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10.16.0
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
     
     - name: Install dependencies
-      run: npm ci
+      run: pnpm install --frozen-lockfile
       working-directory: frontend
     
     - name: Run lint
-      run: npm run lint
+      run: pnpm lint
       working-directory: frontend
     
     - name: Run tests
-      run: npm test -- --coverage --watchAll=false
+      run: pnpm test -- --coverage --watchAll=false
       working-directory: frontend
     
     - name: Upload coverage to Codecov
@@ -45,32 +50,35 @@ jobs:
     
     defaults:
       run:
-        working-directory: api
+        working-directory: backend/api
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Java
-      uses: actions/setup-java@v4
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
       with:
-        distribution: 'temurin'
-        java-version: '17'
-    
-    - name: Cache Gradle packages
+        components: clippy,rustfmt
+
+    - name: Cache cargo dependencies
       uses: actions/cache@v4
       with:
         path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          ~/.cargo/registry
+          ~/.cargo/git
+          backend/api/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('backend/api/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-gradle-
+          ${{ runner.os }}-cargo-
+
+    - name: Check formatting
+      run: cargo fmt -- --check
+    
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
     
     - name: Run tests
-      run: ./gradlew test
-    
-    - name: Run build
-      run: ./gradlew build
+      run: cargo test --all --all-features --locked
 
   security-scan:
     name: Security Scan
