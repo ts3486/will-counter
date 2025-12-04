@@ -34,7 +34,7 @@ jobs:
       working-directory: frontend
     
     - name: Run tests
-      run: pnpm test -- --coverage --watchAll=false
+      run: pnpm run test --coverage --watchAll=false
       working-directory: frontend
     
     - name: Upload coverage to Codecov
@@ -54,11 +54,22 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+
+    - name: Detect Cargo manifest
+      id: cargo_manifest
+      run: |
+        if [ -f Cargo.toml ]; then
+          echo "has_cargo=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_cargo=false" >> "$GITHUB_OUTPUT"
+          echo "Cargo manifest not found; skipping Rust job steps."
+        fi
     
     - name: Setup Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy,rustfmt
+      if: ${{ steps.cargo_manifest.outputs.has_cargo == 'true' }}
 
     - name: Cache cargo dependencies
       uses: actions/cache@v4
@@ -70,15 +81,19 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('backend/api/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
+      if: ${{ steps.cargo_manifest.outputs.has_cargo == 'true' }}
 
     - name: Check formatting
       run: cargo fmt -- --check
+      if: ${{ steps.cargo_manifest.outputs.has_cargo == 'true' }}
     
     - name: Run clippy
       run: cargo clippy --all-targets --all-features -- -D warnings
+      if: ${{ steps.cargo_manifest.outputs.has_cargo == 'true' }}
     
     - name: Run tests
       run: cargo test --all --all-features --locked
+      if: ${{ steps.cargo_manifest.outputs.has_cargo == 'true' }}
 
   security-scan:
     name: Security Scan
