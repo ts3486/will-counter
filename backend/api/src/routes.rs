@@ -24,7 +24,7 @@ use crate::{
 #[derive(Clone)]
 pub struct AppState {
     pub supabase: SupabaseClient,
-    pub cfg: Config,
+    pub _cfg: Config,
     pub auth: AuthState,
 }
 

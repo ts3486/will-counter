@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
 
     let supabase = SupabaseClient::new(cfg.supabase_url.clone(), cfg.supabase_service_role_key.clone())?;
     let auth_state = AuthState::new(cfg.auth0_domain.clone(), cfg.auth0_audience.clone()).await?;
-    let shared = Arc::new(routes::AppState { supabase, cfg: cfg.clone(), auth: auth_state.clone() });
+    let shared = Arc::new(routes::AppState { supabase, _cfg: cfg.clone(), auth: auth_state.clone() });
 
     let app = Router::new()
         .route("/", get(root))

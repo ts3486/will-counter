@@ -28,7 +28,7 @@ pub struct AuthState {
 pub struct AuthUser {
     pub sub: String,
     pub email: Option<String>,
-    pub raw_claims: Value,
+    pub _raw_claims: Value,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,11 +38,11 @@ struct JwkSet {
 
 #[derive(Debug, Deserialize, Clone)]
 struct Jwk {
-    kty: String,
+    _kty: String,
     kid: String,
     n: String,
     e: String,
-    alg: String,
+    _alg: String,
 }
 
 #[derive(Default)]
@@ -149,7 +149,7 @@ pub async fn require_auth(State(state): State<AuthState>, mut req: Request<Body>
     req.extensions_mut().insert(AuthUser {
         sub,
         email,
-        raw_claims: claims,
+        _raw_claims: claims,
     });
 
     next.run(req).await
