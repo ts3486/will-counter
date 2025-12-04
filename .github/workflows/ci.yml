@@ -34,7 +34,7 @@ jobs:
       working-directory: frontend
     
     - name: Run tests
-      run: pnpm run test --coverage --watchAll=false
+      run: pnpm test -- --coverage --watchAll=false
       working-directory: frontend
     
     - name: Upload coverage to Codecov
