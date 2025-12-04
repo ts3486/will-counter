@@ -3,6 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use crate::types::ApiResponse;
 use axum::{
     body::Body,
     extract::State,
@@ -14,7 +15,6 @@ use parking_lot::RwLock;
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::Value;
-use crate::types::ApiResponse;
 
 #[derive(Clone)]
 pub struct AuthState {
@@ -67,7 +67,10 @@ impl AuthState {
     }
 
     async fn refresh_jwks(&self) -> anyhow::Result<()> {
-        let url = format!("https://{}/.well-known/jwks.json", self.domain.trim_end_matches('/'));
+        let url = format!(
+            "https://{}/.well-known/jwks.json",
+            self.domain.trim_end_matches('/')
+        );
         let set: JwkSet = self.client.get(url).send().await?.json().await?;
         let mut cache = self.jwks.write();
         cache.keys = set.keys;
@@ -96,7 +99,11 @@ impl AuthState {
     }
 }
 
-pub async fn require_auth(State(state): State<AuthState>, mut req: Request<Body>, next: Next) -> Response {
+pub async fn require_auth(
+    State(state): State<AuthState>,
+    mut req: Request<Body>,
+    next: Next,
+) -> Response {
     let Some(auth_header) = req.headers().get(axum::http::header::AUTHORIZATION) else {
         return unauthorized("Authentication required");
     };
@@ -107,7 +114,10 @@ pub async fn require_auth(State(state): State<AuthState>, mut req: Request<Body>
     if !auth_str.to_lowercase().starts_with("bearer ") {
         return unauthorized("Authentication required");
     }
-    let token = auth_str.trim_start_matches(|c| c == 'B' || c == 'b').trim_start_matches("earer").trim();
+    let token = auth_str
+        .trim_start_matches(['B', 'b'])
+        .trim_start_matches("earer")
+        .trim();
     if token.is_empty() {
         return unauthorized("Authentication required");
     }
@@ -132,19 +142,27 @@ pub async fn require_auth(State(state): State<AuthState>, mut req: Request<Body>
 
     let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
     validation.set_issuer(&[format!("https://{}/", state.domain.trim_end_matches('/'))]);
-    validation.set_audience(&[state.audience.clone()]);
+    validation.set_audience(std::slice::from_ref(&state.audience));
 
-    let token_data: jsonwebtoken::TokenData<Value> = match jsonwebtoken::decode(token, &decoding_key, &validation) {
-        Ok(t) => t,
-        Err(_) => return unauthorized("Invalid or expired token"),
-    };
+    let token_data: jsonwebtoken::TokenData<Value> =
+        match jsonwebtoken::decode(token, &decoding_key, &validation) {
+            Ok(t) => t,
+            Err(_) => return unauthorized("Invalid or expired token"),
+        };
 
     let claims = token_data.claims;
-    let sub = claims.get("sub").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let sub = claims
+        .get("sub")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
     if sub.is_empty() {
         return unauthorized("Invalid token subject");
     }
-    let email = claims.get("email").and_then(|v| v.as_str()).map(|s| s.to_string());
+    let email = claims
+        .get("email")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
 
     req.extensions_mut().insert(AuthUser {
         sub,
@@ -156,7 +174,9 @@ pub async fn require_auth(State(state): State<AuthState>, mut req: Request<Body>
 }
 
 fn build_decoding_key(jwk: &Jwk) -> anyhow::Result<jsonwebtoken::DecodingKey> {
-    Ok(jsonwebtoken::DecodingKey::from_rsa_components(&jwk.n, &jwk.e)?)
+    Ok(jsonwebtoken::DecodingKey::from_rsa_components(
+        &jwk.n, &jwk.e,
+    )?)
 }
 
 fn unauthorized(msg: &str) -> Response {

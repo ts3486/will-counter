@@ -18,7 +18,10 @@ use crate::{
     auth::{require_auth, AuthState, AuthUser},
     config::Config,
     supabase::SupabaseClient,
-    types::{ApiResponse, CreateUserRequest, DailyStat, StatisticsResponse, SupabaseUser, UserResponse, WillCountResponse},
+    types::{
+        ApiResponse, CreateUserRequest, DailyStat, StatisticsResponse, SupabaseUser, UserResponse,
+        WillCountResponse,
+    },
 };
 
 #[derive(Clone)]
@@ -72,7 +75,9 @@ pub fn secure_routes(state: SharedState) -> Router<SharedState> {
 
 pub fn docs_router<S: Clone + Send + Sync + 'static>() -> Router<S> {
     let openapi = ApiDoc::openapi();
-    SwaggerUi::new("/docs").url("/docs/openapi.json", openapi).into()
+    SwaggerUi::new("/docs")
+        .url("/docs/openapi.json", openapi)
+        .into()
 }
 
 pub async fn root() -> impl IntoResponse {
@@ -149,7 +154,11 @@ async fn create_user(
             }),
         )
             .into_response(),
-        _ => match state.supabase.ensure_user_exists(&req.auth0_id, &req.email).await {
+        _ => match state
+            .supabase
+            .ensure_user_exists(&req.auth0_id, &req.email)
+            .await
+        {
             Ok(user) => (
                 StatusCode::CREATED,
                 Json(ApiResponse {
@@ -209,7 +218,10 @@ async fn me(State(state): State<SharedState>, Extension(user): Extension<AuthUse
     }
 }
 
-async fn get_user_by_auth0(State(state): State<SharedState>, Path(auth0_id): Path<String>) -> Response {
+async fn get_user_by_auth0(
+    State(state): State<SharedState>,
+    Path(auth0_id): Path<String>,
+) -> Response {
     if auth0_id.is_empty() {
         return (
             StatusCode::BAD_REQUEST,
@@ -256,7 +268,10 @@ async fn get_user_by_auth0(State(state): State<SharedState>, Path(auth0_id): Pat
     }
 }
 
-async fn update_login(State(state): State<SharedState>, Path(user_id): Path<String>) -> impl IntoResponse {
+async fn update_login(
+    State(state): State<SharedState>,
+    Path(user_id): Path<String>,
+) -> impl IntoResponse {
     if user_id.is_empty() {
         return (
             StatusCode::BAD_REQUEST,
@@ -305,8 +320,14 @@ async fn update_login(State(state): State<SharedState>, Path(user_id): Path<Stri
     responses((status = 200, body = ApiResponseMapStringString)),
     security(("bearerAuth" = []))
 )]
-async fn ensure_user(State(state): State<SharedState>, Extension(user): Extension<AuthUser>) -> Response {
-    let email = user.email.clone().unwrap_or_else(|| "unknown@domain.com".to_string());
+async fn ensure_user(
+    State(state): State<SharedState>,
+    Extension(user): Extension<AuthUser>,
+) -> Response {
+    let email = user
+        .email
+        .clone()
+        .unwrap_or_else(|| "unknown@domain.com".to_string());
     match state.supabase.ensure_user_exists(&user.sub, &email).await {
         Ok(user) => (
             StatusCode::OK,
@@ -338,9 +359,16 @@ async fn ensure_user(State(state): State<SharedState>, Extension(user): Extensio
     security(("bearerAuth" = []))
 )]
 async fn today(State(state): State<SharedState>, Extension(user): Extension<AuthUser>) -> Response {
-    let email = user.email.clone().unwrap_or_else(|| "unknown@domain.com".to_string());
+    let email = user
+        .email
+        .clone()
+        .unwrap_or_else(|| "unknown@domain.com".to_string());
     match state.supabase.ensure_user_exists(&user.sub, &email).await {
-        Ok(user_data) => match state.supabase.get_today_count(&user_data.id.to_string()).await {
+        Ok(user_data) => match state
+            .supabase
+            .get_today_count(&user_data.id.to_string())
+            .await
+        {
             Ok(count) => (
                 StatusCode::OK,
                 Json(WillCountResponse {
@@ -384,10 +412,20 @@ async fn today(State(state): State<SharedState>, Extension(user): Extension<Auth
     responses((status = 200, body = WillCountResponse)),
     security(("bearerAuth" = []))
 )]
-async fn increment(State(state): State<SharedState>, Extension(user): Extension<AuthUser>) -> Response {
-    let email = user.email.clone().unwrap_or_else(|| "unknown@domain.com".to_string());
+async fn increment(
+    State(state): State<SharedState>,
+    Extension(user): Extension<AuthUser>,
+) -> Response {
+    let email = user
+        .email
+        .clone()
+        .unwrap_or_else(|| "unknown@domain.com".to_string());
     match state.supabase.ensure_user_exists(&user.sub, &email).await {
-        Ok(user_data) => match state.supabase.increment_count(&user_data.id.to_string()).await {
+        Ok(user_data) => match state
+            .supabase
+            .increment_count(&user_data.id.to_string())
+            .await
+        {
             Ok(count) => (
                 StatusCode::OK,
                 Json(WillCountResponse {
@@ -431,8 +469,14 @@ async fn increment(State(state): State<SharedState>, Extension(user): Extension<
     responses((status = 200, body = WillCountResponse)),
     security(("bearerAuth" = []))
 )]
-async fn reset_today(State(state): State<SharedState>, Extension(user): Extension<AuthUser>) -> Response {
-    let email = user.email.clone().unwrap_or_else(|| "unknown@domain.com".to_string());
+async fn reset_today(
+    State(state): State<SharedState>,
+    Extension(user): Extension<AuthUser>,
+) -> Response {
+    let email = user
+        .email
+        .clone()
+        .unwrap_or_else(|| "unknown@domain.com".to_string());
     match state.supabase.ensure_user_exists(&user.sub, &email).await {
         Ok(user_data) => match state.supabase.reset_today(&user_data.id.to_string()).await {
             Ok(count) => (
@@ -491,16 +535,31 @@ async fn statistics(
     Extension(user): Extension<AuthUser>,
     Query(query): Query<StatsQuery>,
 ) -> Response {
-    let email = user.email.clone().unwrap_or_else(|| "unknown@domain.com".to_string());
+    let email = user
+        .email
+        .clone()
+        .unwrap_or_else(|| "unknown@domain.com".to_string());
     let days = query.days.unwrap_or(30).max(1);
     match state.supabase.ensure_user_exists(&user.sub, &email).await {
-        Ok(user_data) => match state.supabase.get_statistics(&user_data.id.to_string(), days).await {
+        Ok(user_data) => match state
+            .supabase
+            .get_statistics(&user_data.id.to_string(), days)
+            .await
+        {
             Ok(counts) => {
                 let total: i32 = counts.iter().map(|c| c.count).sum();
                 let today_str = chrono::Utc::now().date_naive().to_string();
-                let today_count = counts.iter().find(|c| c.date == today_str).map(|c| c.count).unwrap_or(0);
+                let today_count = counts
+                    .iter()
+                    .find(|c| c.date == today_str)
+                    .map(|c| c.count)
+                    .unwrap_or(0);
                 let denom = days.min(7);
-                let weekly_average = if denom > 0 { total as f64 / denom as f64 } else { 0.0 };
+                let weekly_average = if denom > 0 {
+                    total as f64 / denom as f64
+                } else {
+                    0.0
+                };
                 let daily_counts: Vec<DailyStat> = counts
                     .into_iter()
                     .map(|c| DailyStat {
@@ -558,8 +617,18 @@ fn cors_layer() -> CorsLayer {
     ];
 
     CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE, Method::OPTIONS])
-        .allow_headers([axum::http::header::AUTHORIZATION, axum::http::header::CONTENT_TYPE])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
+        .allow_headers([
+            axum::http::header::AUTHORIZATION,
+            axum::http::header::CONTENT_TYPE,
+        ])
         .allow_credentials(true)
         .allow_origin(AllowOrigin::list(origins))
         .max_age(std::time::Duration::from_secs(60 * 60 * 12))
