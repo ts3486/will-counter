@@ -5,11 +5,13 @@ import { getResponsiveFontSize } from '../utils/responsive';
 import { useTheme } from '../contexts/ThemeContext';
 
 import WillCounterScreen from '../components/counter/WillCounterScreen';
+import HistoryScreen from '../components/history/HistoryScreen';
 // import StatisticsScreen from '../components/statistics/StatisticsScreen'; // Removed Statistics page
 import SettingsScreen from '../components/settings/SettingsScreen';
 
 export type TabParamList = {
   Counter: undefined;
+  History: undefined;
   // Statistics: undefined; // Removed Statistics page
   Settings: undefined;
 };
@@ -69,6 +71,21 @@ const TabNavigator = () => {
               color 
             }}>
               🎯
+            </Text>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{
+          tabBarLabel: 'History',
+          tabBarIcon: ({ focused, color }) => (
+            <Text style={{ 
+              fontSize: focused ? iconSize + 4 : iconSize, 
+              color 
+            }}>
+              📈
             </Text>
           ),
         }}
