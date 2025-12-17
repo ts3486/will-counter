@@ -38,11 +38,11 @@ struct JwkSet {
 
 #[derive(Debug, Deserialize, Clone)]
 struct Jwk {
-    _kty: String,
+    kty: String,
     kid: String,
     n: String,
     e: String,
-    _alg: String,
+    alg: String,
 }
 
 #[derive(Default)]
@@ -71,7 +71,23 @@ impl AuthState {
             "https://{}/.well-known/jwks.json",
             self.domain.trim_end_matches('/')
         );
-        let set: JwkSet = self.client.get(url).send().await?.json().await?;
+        let resp = self
+            .client
+            .get(url.clone())
+            .send()
+            .await
+            .map_err(|e| e)?;
+
+        let status = resp.status();
+        let bytes = resp.bytes().await.map_err(|e| e)?;
+
+        if !status.is_success() {
+            let body = String::from_utf8_lossy(&bytes);
+            anyhow::bail!("jwks fetch status {}", status);
+        }
+
+        let set: JwkSet = serde_json::from_slice(&bytes).map_err(|e| e)?;
+
         let mut cache = self.jwks.write();
         cache.keys = set.keys;
         cache.fetched_at = Some(Instant::now());
@@ -91,11 +107,9 @@ impl AuthState {
             }
         }
         // Refresh if stale or missing.
-        if self.refresh_jwks().await.is_ok() {
-            let cache = self.jwks.read();
-            return cache.keys.iter().find(|k| k.kid == kid).cloned();
-        }
-        None
+        let _ = self.refresh_jwks().await;
+        let cache = self.jwks.read();
+        cache.keys.iter().find(|k| k.kid == kid).cloned()
     }
 }
 

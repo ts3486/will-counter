@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use chrono::{Duration as ChronoDuration, Utc};
 use parking_lot::RwLock;
-use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
+use reqwest::{Client, StatusCode};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -40,7 +40,6 @@ impl SupabaseClient {
                 reqwest::header::AUTHORIZATION,
                 format!("Bearer {}", self.service_role_key),
             ),
-            (CONTENT_TYPE, "application/json".to_string()),
         ]
     }
 
@@ -85,7 +84,15 @@ impl SupabaseClient {
         }
 
         let url = format!("{}/rest/v1/users", self.base_url);
-        let payload = json!({ "auth0_id": auth0_id, "email": email });
+        let payload = json!({
+            "auth0_id": auth0_id,
+            "email": email,
+            "preferences": {
+                "theme": "light",
+                "soundEnabled": true,
+                "notificationEnabled": true
+            }
+        });
         let request = self
             .client
             .post(url)
@@ -97,8 +104,9 @@ impl SupabaseClient {
             .fold(request, |r, (k, v)| r.header(k, v));
         let resp = request.send().await;
         match resp {
-            Ok(resp) if resp.status() == StatusCode::CREATED => {
-                let created: Vec<SupabaseUser> = resp.json().await?;
+            Ok(resp) if resp.status() == StatusCode::CREATED || resp.status() == StatusCode::OK => {
+                let status = resp.status();
+                let created: Vec<SupabaseUser> = resp.json().await.unwrap_or_default();
                 if let Some(user) = created.into_iter().next() {
                     return Ok(user);
                 }
