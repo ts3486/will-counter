@@ -13,6 +13,22 @@ type Summary = {
   weeklyAverage: number;
 };
 
+const computeSummaryFromData = (data: DailyStat[]): Summary => {
+  if (!data.length) {
+    return { today: 0, total: 0, weeklyAverage: 0 };
+  }
+  const total = data.reduce((sum, item) => sum + item.count, 0);
+  const lastWeek = data.slice(-7);
+  const weeklyAverage =
+    lastWeek.reduce((sum, item) => sum + item.count, 0) /
+    Math.max(lastWeek.length, 1);
+  return {
+    today: data[data.length - 1].count,
+    total,
+    weeklyAverage,
+  };
+};
+
 const HistoryScreen: React.FC = () => {
   const { theme } = useTheme();
   const dimensions = useResponsiveDimensions();
@@ -20,6 +36,23 @@ const HistoryScreen: React.FC = () => {
   const [summary, setSummary] = useState<Summary>({ today: 0, total: 0, weeklyAverage: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const applyDataset = useCallback((data: DailyStat[], summaryOverride?: Partial<Summary>) => {
+    const sorted = [...data].sort(
+      (a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime()
+    );
+    const computed = computeSummaryFromData(sorted);
+    const merged: Summary = {
+      today: summaryOverride?.today ?? computed.today,
+      total: summaryOverride?.total ?? computed.total,
+      weeklyAverage:
+        typeof summaryOverride?.weeklyAverage === 'number'
+          ? summaryOverride.weeklyAverage
+          : computed.weeklyAverage,
+    };
+    setHistory(sorted);
+    setSummary(merged);
+  }, []);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -29,18 +62,18 @@ const HistoryScreen: React.FC = () => {
       const sorted = [...(stats.daily_counts || [])].sort(
         (a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime()
       );
-      setHistory(sorted);
-      setSummary({
+      applyDataset(sorted, {
         today: stats.today_count,
         total: stats.total_count,
         weeklyAverage: stats.weekly_average,
       });
     } catch (err) {
+      applyDataset([]);
       setError(err instanceof Error ? err.message : 'Failed to load history');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyDataset]);
 
   useEffect(() => {
     fetchHistory();
@@ -77,6 +110,9 @@ const HistoryScreen: React.FC = () => {
         >
           <View style={styles.header}>
             <Text style={[styles.title, { color: '#101418' }]}>History</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
+              Recent counts based on Supabase timestamps
+            </Text>
             {error && (
               <Text style={[styles.errorText, { color: theme.colors.status.error }]}>
                 {error}
@@ -116,7 +152,7 @@ const HistoryScreen: React.FC = () => {
                 {summary.total}
               </Text>
               <Text style={[styles.summaryHint, { color: theme.colors.text.secondary }]}>
-                Avg {summary.weeklyAverage.toFixed(1)} / day
+                Avg {Number(summary.weeklyAverage || 0).toFixed(1)} / day
               </Text>
             </View>
           </View>
