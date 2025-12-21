@@ -51,6 +51,8 @@ PODS:
     - ExpoModulesCore
   - ExpoLinearGradient (14.1.5):
     - ExpoModulesCore
+  - ExpoLinking (7.1.7):
+    - ExpoModulesCore
   - ExpoModulesCore (2.5.0):
     - DoubleConversion
     - glog
@@ -1855,6 +1857,7 @@ DEPENDENCIES:
   - "ExpoHaptics (from `../node_modules/.pnpm/expo-haptics@14.1.4_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+core@7.2_ad26b776f3389e568fa810e6aa523cad/node_modules/expo-haptics/ios`)"
   - "ExpoKeepAwake (from `../node_modules/.pnpm/expo-keep-awake@14.1.4_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+core@_457c9d6a58adb9e69ef546fd38cc8a07/node_modules/expo-keep-awake/ios`)"
   - "ExpoLinearGradient (from `../node_modules/.pnpm/expo-linear-gradient@14.1.5_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+_b74acb05684b8a77ab7c6bfd0067cb04/node_modules/expo-linear-gradient/ios`)"
+  - "ExpoLinking (from `../node_modules/.pnpm/expo-linking@7.1.7_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+core@7.28_f738ede5ada9fc168ce51a316c7df992/node_modules/expo-linking/ios`)"
   - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@2.5.0/node_modules/expo-modules-core`)"
   - "ExpoSecureStore (from `../node_modules/.pnpm/expo-secure-store@14.2.4_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+cor_c45571ddb365cde15f9feced63d0af18/node_modules/expo-secure-store/ios`)"
   - "ExpoWebBrowser (from `../node_modules/.pnpm/expo-web-browser@14.2.0_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+core_0a6a4a9a19ba1b0d155399aa7e9b620b/node_modules/expo-web-browser/ios`)"
@@ -1972,6 +1975,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo-keep-awake@14.1.4_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+core@_457c9d6a58adb9e69ef546fd38cc8a07/node_modules/expo-keep-awake/ios"
   ExpoLinearGradient:
     :path: "../node_modules/.pnpm/expo-linear-gradient@14.1.5_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+_b74acb05684b8a77ab7c6bfd0067cb04/node_modules/expo-linear-gradient/ios"
+  ExpoLinking:
+    :path: "../node_modules/.pnpm/expo-linking@7.1.7_expo@53.0.24_@babel+core@7.28.5_react-native@0.79.6_@babel+core@7.28_f738ede5ada9fc168ce51a316c7df992/node_modules/expo-linking/ios"
   ExpoModulesCore:
     :path: "../node_modules/.pnpm/expo-modules-core@2.5.0/node_modules/expo-modules-core"
   ExpoSecureStore:
@@ -2145,6 +2150,7 @@ SPEC CHECKSUMS:
   ExpoHaptics: 0ff6e0d83cd891178a306e548da1450249d54500
   ExpoKeepAwake: bf0811570c8da182bfb879169437d4de298376e7
   ExpoLinearGradient: 7734c8059972fcf691fb4330bcdf3390960a152d
+  ExpoLinking: d5c183998ca6ada66ff45e407e0f965b398a8902
   ExpoModulesCore: 272bc6c06ddd9c4bee2048acc57891cab3700627
   ExpoSecureStore: 3f1b632d6d40bcc62b4983ef9199cd079592a50a
   ExpoWebBrowser: dc39a88485f007e61a3dff05d6a75f22ab4a2e92
