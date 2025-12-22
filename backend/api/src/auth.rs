@@ -71,12 +71,7 @@ impl AuthState {
             "https://{}/.well-known/jwks.json",
             self.domain.trim_end_matches('/')
         );
-        let resp = self
-            .client
-            .get(url.clone())
-            .send()
-            .await
-            .map_err(|e| e)?;
+        let resp = self.client.get(url.clone()).send().await.map_err(|e| e)?;
 
         let status = resp.status();
         let bytes = resp.bytes().await.map_err(|e| e)?;
@@ -204,4 +199,19 @@ fn unauthorized(msg: &str) -> Response {
         }),
     )
         .into_response()
+}
+
+#[cfg(test)]
+impl AuthState {
+    pub fn for_tests() -> Self {
+        let client = Client::builder()
+            .build()
+            .expect("failed to build reqwest client for tests");
+        Self {
+            domain: "test-domain".to_string(),
+            audience: "test-audience".to_string(),
+            client,
+            jwks: Arc::new(RwLock::new(CachedJwks::default())),
+        }
+    }
 }

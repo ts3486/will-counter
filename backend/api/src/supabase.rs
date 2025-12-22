@@ -8,6 +8,25 @@ use uuid::Uuid;
 
 use crate::types::{SupabaseUser, SupabaseWillCount};
 
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait SupabaseService: Send + Sync {
+    async fn health_check(&self) -> bool;
+    async fn get_user_by_auth0(&self, auth0_id: &str) -> anyhow::Result<Option<SupabaseUser>>;
+    async fn ensure_user_exists(&self, auth0_id: &str, email: &str)
+        -> anyhow::Result<SupabaseUser>;
+    async fn update_last_login(&self, user_id: &str) -> anyhow::Result<bool>;
+    async fn get_today_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount>;
+    async fn increment_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount>;
+    async fn reset_today(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount>;
+    async fn get_statistics(
+        &self,
+        user_id: &str,
+        days: i32,
+    ) -> anyhow::Result<Vec<SupabaseWillCount>>;
+}
+
 #[derive(Clone)]
 pub struct SupabaseClient {
     base_url: String,
@@ -376,5 +395,48 @@ impl SupabaseClient {
         };
         store.insert(key, user.clone());
         user
+    }
+}
+
+#[async_trait]
+impl SupabaseService for SupabaseClient {
+    async fn health_check(&self) -> bool {
+        SupabaseClient::health_check(self).await
+    }
+
+    async fn get_user_by_auth0(&self, auth0_id: &str) -> anyhow::Result<Option<SupabaseUser>> {
+        SupabaseClient::get_user_by_auth0(self, auth0_id).await
+    }
+
+    async fn ensure_user_exists(
+        &self,
+        auth0_id: &str,
+        email: &str,
+    ) -> anyhow::Result<SupabaseUser> {
+        SupabaseClient::ensure_user_exists(self, auth0_id, email).await
+    }
+
+    async fn update_last_login(&self, user_id: &str) -> anyhow::Result<bool> {
+        SupabaseClient::update_last_login(self, user_id).await
+    }
+
+    async fn get_today_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount> {
+        SupabaseClient::get_today_count(self, user_id).await
+    }
+
+    async fn increment_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount> {
+        SupabaseClient::increment_count(self, user_id).await
+    }
+
+    async fn reset_today(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount> {
+        SupabaseClient::reset_today(self, user_id).await
+    }
+
+    async fn get_statistics(
+        &self,
+        user_id: &str,
+        days: i32,
+    ) -> anyhow::Result<Vec<SupabaseWillCount>> {
+        SupabaseClient::get_statistics(self, user_id, days).await
     }
 }

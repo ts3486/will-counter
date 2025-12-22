@@ -85,7 +85,7 @@ const GoalAchievement: React.FC<GoalAchievementProps> = ({
     transform: [
       { scale: scale.value },
       { rotateZ: `${rotation.value}deg` }
-    ],
+    ] as const,
     opacity: opacity.value,
   }));
 
