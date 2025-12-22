@@ -925,7 +925,7 @@ mod tests {
             .to_bytes();
         let payload: ApiResponse<Value> =
             serde_json::from_slice(&body_bytes).expect("valid error payload");
-        assert_eq!(payload.success, false);
+        assert!(!payload.success);
         assert_eq!(payload.error.as_deref(), Some("Failed to increment count"));
     }
 
