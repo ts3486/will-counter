@@ -21,7 +21,7 @@ const AppNavigator = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator id="root" screenOptions={{ headerShown: false }}>
       {isAuthenticated ? (
         <Stack.Screen name="Main" component={TabNavigator} />
       ) : (

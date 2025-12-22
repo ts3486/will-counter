@@ -38,10 +38,12 @@ struct JwkSet {
 
 #[derive(Debug, Deserialize, Clone)]
 struct Jwk {
+    #[serde(rename = "kty")]
     _kty: String,
     kid: String,
     n: String,
     e: String,
+    #[serde(rename = "alg")]
     _alg: String,
 }
 
@@ -71,7 +73,18 @@ impl AuthState {
             "https://{}/.well-known/jwks.json",
             self.domain.trim_end_matches('/')
         );
-        let set: JwkSet = self.client.get(url).send().await?.json().await?;
+        let resp = self.client.get(url.clone()).send().await?;
+
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+
+        if !status.is_success() {
+            let body_preview = String::from_utf8_lossy(&bytes);
+            anyhow::bail!("jwks fetch status {} body {}", status, body_preview);
+        }
+
+        let set: JwkSet = serde_json::from_slice(&bytes)?;
+
         let mut cache = self.jwks.write();
         cache.keys = set.keys;
         cache.fetched_at = Some(Instant::now());
@@ -91,11 +104,9 @@ impl AuthState {
             }
         }
         // Refresh if stale or missing.
-        if self.refresh_jwks().await.is_ok() {
-            let cache = self.jwks.read();
-            return cache.keys.iter().find(|k| k.kid == kid).cloned();
-        }
-        None
+        let _ = self.refresh_jwks().await;
+        let cache = self.jwks.read();
+        cache.keys.iter().find(|k| k.kid == kid).cloned()
     }
 }
 
@@ -190,4 +201,19 @@ fn unauthorized(msg: &str) -> Response {
         }),
     )
         .into_response()
+}
+
+#[cfg(test)]
+impl AuthState {
+    pub fn for_tests() -> Self {
+        let client = Client::builder()
+            .build()
+            .expect("failed to build reqwest client for tests");
+        Self {
+            domain: "test-domain".to_string(),
+            audience: "test-audience".to_string(),
+            client,
+            jwks: Arc::new(RwLock::new(CachedJwks::default())),
+        }
+    }
 }

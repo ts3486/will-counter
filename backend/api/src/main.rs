@@ -10,7 +10,11 @@ use std::{net::SocketAddr, sync::Arc};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::fmt;
 
-use crate::{auth::AuthState, config::Config, supabase::SupabaseClient};
+use crate::{
+    auth::AuthState,
+    config::Config,
+    supabase::{SupabaseClient, SupabaseService},
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,10 +25,11 @@ async fn main() -> anyhow::Result<()> {
 
     let cfg = Config::from_env()?;
 
-    let supabase = SupabaseClient::new(
+    let supabase_client = SupabaseClient::new(
         cfg.supabase_url.clone(),
         cfg.supabase_service_role_key.clone(),
     )?;
+    let supabase: Arc<dyn SupabaseService> = Arc::new(supabase_client);
     let auth_state = AuthState::new(cfg.auth0_domain.clone(), cfg.auth0_audience.clone()).await?;
     let shared = Arc::new(routes::AppState {
         supabase,

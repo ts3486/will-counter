@@ -3,6 +3,7 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
+  StyleProp,
   ViewStyle,
   TextStyle,
   ActivityIndicator,
@@ -16,8 +17,8 @@ interface ThemedButtonProps {
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   loading?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 export const ThemedButton: React.FC<ThemedButtonProps> = ({

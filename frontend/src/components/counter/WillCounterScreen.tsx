@@ -25,6 +25,7 @@ import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
 import { getResponsivePadding, getMaxContentWidth } from '../../utils/responsive';
 import GradientBackground from '../shared/GradientBackground';
 import ThemedButton from '../shared/ThemedButton';
+import type { AppDispatch } from '../../store/store';
 
 // Type definitions
 interface CounterHistoryItem {
@@ -35,7 +36,7 @@ interface CounterHistoryItem {
 }
 
 const WillCounterScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useAuth();
   const count = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
@@ -54,7 +55,7 @@ const WillCounterScreen: React.FC = () => {
   // Load today's count on component mount
   useEffect(() => {
     // Load count immediately for testing (bypassing auth for now)
-    dispatch(fetchTodayCount('') as any);
+    dispatch(fetchTodayCount(''));
   }, [dispatch]);
 
   // Debug count changes
@@ -90,7 +91,7 @@ const WillCounterScreen: React.FC = () => {
   // Increment counter
   const handleIncrement = useCallback((): void => {
     // Backend API will extract user from JWT token
-    dispatch(incrementCount('') as any);
+    dispatch(incrementCount(''));
     triggerHaptic('light');
     
     // Check if daily goal is reached - show modal immediately
