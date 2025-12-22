@@ -121,6 +121,9 @@ importers:
       '@types/react-test-renderer':
         specifier: ^19.1.0
         version: 19.1.0
+      babel-preset-expo:
+        specifier: ~13.2.4
+        version: 13.2.4(@babel/core@7.28.5)
       eslint:
         specifier: ^8.19.0
         version: 8.57.1
