@@ -124,7 +124,6 @@ impl SupabaseClient {
         let resp = request.send().await;
         match resp {
             Ok(resp) if resp.status() == StatusCode::CREATED || resp.status() == StatusCode::OK => {
-                let status = resp.status();
                 let created: Vec<SupabaseUser> = resp.json().await.unwrap_or_default();
                 if let Some(user) = created.into_iter().next() {
                     return Ok(user);

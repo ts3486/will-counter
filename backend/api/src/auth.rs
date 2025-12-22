@@ -38,11 +38,13 @@ struct JwkSet {
 
 #[derive(Debug, Deserialize, Clone)]
 struct Jwk {
-    kty: String,
+    #[serde(rename = "kty")]
+    _kty: String,
     kid: String,
     n: String,
     e: String,
-    alg: String,
+    #[serde(rename = "alg")]
+    _alg: String,
 }
 
 #[derive(Default)]
@@ -71,17 +73,17 @@ impl AuthState {
             "https://{}/.well-known/jwks.json",
             self.domain.trim_end_matches('/')
         );
-        let resp = self.client.get(url.clone()).send().await.map_err(|e| e)?;
+        let resp = self.client.get(url.clone()).send().await?;
 
         let status = resp.status();
-        let bytes = resp.bytes().await.map_err(|e| e)?;
+        let bytes = resp.bytes().await?;
 
         if !status.is_success() {
-            let body = String::from_utf8_lossy(&bytes);
-            anyhow::bail!("jwks fetch status {}", status);
+            let body_preview = String::from_utf8_lossy(&bytes);
+            anyhow::bail!("jwks fetch status {} body {}", status, body_preview);
         }
 
-        let set: JwkSet = serde_json::from_slice(&bytes).map_err(|e| e)?;
+        let set: JwkSet = serde_json::from_slice(&bytes)?;
 
         let mut cache = self.jwks.write();
         cache.keys = set.keys;
