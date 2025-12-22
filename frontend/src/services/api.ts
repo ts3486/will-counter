@@ -17,6 +17,17 @@ export interface StatisticsResponse {
   daily_counts: DailyStat[];
 }
 
+const normalizeStatistics = (payload: any): StatisticsResponse => {
+  const raw = payload ?? {};
+  const daily = raw.daily_counts ?? raw.dailyCounts ?? [];
+  return {
+    total_count: raw.total_count ?? raw.totalCount ?? 0,
+    today_count: raw.today_count ?? raw.todayCount ?? 0,
+    weekly_average: raw.weekly_average ?? raw.weeklyAverage ?? 0,
+    daily_counts: Array.isArray(daily) ? daily : [],
+  };
+};
+
 // Validate required environment variables
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   // Configuration warning removed for production
@@ -132,10 +143,10 @@ export const apiService = {
     const result = await response.json();
     if (result.success !== undefined) {
       if (!result.success) throw new Error(result.error || 'Failed to load history');
-      return result.data;
+      return normalizeStatistics(result.data);
     }
 
-    return result;
+    return normalizeStatistics(result);
   },
 
   async resetTodayCount(_userId?: string) {
