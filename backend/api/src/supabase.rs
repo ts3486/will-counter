@@ -2,11 +2,30 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use chrono::{Duration as ChronoDuration, Utc};
 use parking_lot::RwLock;
-use reqwest::{header::CONTENT_TYPE, Client, StatusCode};
+use reqwest::{Client, StatusCode};
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::types::{SupabaseUser, SupabaseWillCount};
+
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait SupabaseService: Send + Sync {
+    async fn health_check(&self) -> bool;
+    async fn get_user_by_auth0(&self, auth0_id: &str) -> anyhow::Result<Option<SupabaseUser>>;
+    async fn ensure_user_exists(&self, auth0_id: &str, email: &str)
+        -> anyhow::Result<SupabaseUser>;
+    async fn update_last_login(&self, user_id: &str) -> anyhow::Result<bool>;
+    async fn get_today_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount>;
+    async fn increment_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount>;
+    async fn reset_today(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount>;
+    async fn get_statistics(
+        &self,
+        user_id: &str,
+        days: i32,
+    ) -> anyhow::Result<Vec<SupabaseWillCount>>;
+}
 
 #[derive(Clone)]
 pub struct SupabaseClient {
@@ -40,7 +59,6 @@ impl SupabaseClient {
                 reqwest::header::AUTHORIZATION,
                 format!("Bearer {}", self.service_role_key),
             ),
-            (CONTENT_TYPE, "application/json".to_string()),
         ]
     }
 
@@ -85,7 +103,15 @@ impl SupabaseClient {
         }
 
         let url = format!("{}/rest/v1/users", self.base_url);
-        let payload = json!({ "auth0_id": auth0_id, "email": email });
+        let payload = json!({
+            "auth0_id": auth0_id,
+            "email": email,
+            "preferences": {
+                "theme": "light",
+                "soundEnabled": true,
+                "notificationEnabled": true
+            }
+        });
         let request = self
             .client
             .post(url)
@@ -97,8 +123,8 @@ impl SupabaseClient {
             .fold(request, |r, (k, v)| r.header(k, v));
         let resp = request.send().await;
         match resp {
-            Ok(resp) if resp.status() == StatusCode::CREATED => {
-                let created: Vec<SupabaseUser> = resp.json().await?;
+            Ok(resp) if resp.status() == StatusCode::CREATED || resp.status() == StatusCode::OK => {
+                let created: Vec<SupabaseUser> = resp.json().await.unwrap_or_default();
                 if let Some(user) = created.into_iter().next() {
                     return Ok(user);
                 }
@@ -368,5 +394,48 @@ impl SupabaseClient {
         };
         store.insert(key, user.clone());
         user
+    }
+}
+
+#[async_trait]
+impl SupabaseService for SupabaseClient {
+    async fn health_check(&self) -> bool {
+        SupabaseClient::health_check(self).await
+    }
+
+    async fn get_user_by_auth0(&self, auth0_id: &str) -> anyhow::Result<Option<SupabaseUser>> {
+        SupabaseClient::get_user_by_auth0(self, auth0_id).await
+    }
+
+    async fn ensure_user_exists(
+        &self,
+        auth0_id: &str,
+        email: &str,
+    ) -> anyhow::Result<SupabaseUser> {
+        SupabaseClient::ensure_user_exists(self, auth0_id, email).await
+    }
+
+    async fn update_last_login(&self, user_id: &str) -> anyhow::Result<bool> {
+        SupabaseClient::update_last_login(self, user_id).await
+    }
+
+    async fn get_today_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount> {
+        SupabaseClient::get_today_count(self, user_id).await
+    }
+
+    async fn increment_count(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount> {
+        SupabaseClient::increment_count(self, user_id).await
+    }
+
+    async fn reset_today(&self, user_id: &str) -> anyhow::Result<SupabaseWillCount> {
+        SupabaseClient::reset_today(self, user_id).await
+    }
+
+    async fn get_statistics(
+        &self,
+        user_id: &str,
+        days: i32,
+    ) -> anyhow::Result<Vec<SupabaseWillCount>> {
+        SupabaseClient::get_statistics(self, user_id, days).await
     }
 }

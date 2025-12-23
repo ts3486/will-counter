@@ -40,21 +40,28 @@ jest.mock('expo-haptics', () => ({
   },
 }));
 
+// Mock expo-secure-store
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({ children }: any) => children,
+  SafeAreaView: ({ children }) => children,
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
 // Mock react-native-svg
 jest.mock('react-native-svg', () => ({
-  Svg: ({ children }: any) => children,
-  Circle: ({ children, ...props }: any) => ({ ...props, children }),
+  Svg: ({ children }) => children,
+  Circle: ({ children, ...props }) => ({ ...props, children }),
 }));
 
 // Mock expo-linear-gradient
 jest.mock('expo-linear-gradient', () => ({
-  LinearGradient: ({ children }: any) => children,
+  LinearGradient: ({ children }) => children,
 }));
 
 // Mock React Navigation
@@ -71,15 +78,15 @@ jest.mock('@react-navigation/native', () => {
       params: {},
     }),
     useIsFocused: () => true,
-    NavigationContainer: ({ children }: any) => children,
+    NavigationContainer: ({ children }) => children,
   };
 });
 
 // Mock React Navigation Bottom Tabs
 jest.mock('@react-navigation/bottom-tabs', () => ({
   createBottomTabNavigator: () => ({
-    Navigator: ({ children }: any) => children,
-    Screen: ({ children }: any) => children,
+    Navigator: ({ children }) => children,
+    Screen: ({ children }) => children,
   }),
 }));
 

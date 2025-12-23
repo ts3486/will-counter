@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["react-native", "react-navigation"],
+    "types": ["react-native", "react-navigation", "jest"],
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "noImplicitAny": false,
@@ -8,9 +8,6 @@
   },
   "extends": "expo/tsconfig.base",
   "exclude": [
-    "__tests__/**/*",
-    "**/*.test.ts",
-    "**/*.test.tsx",
     "src/store/slices/authSlice.original.ts"
   ]
 }

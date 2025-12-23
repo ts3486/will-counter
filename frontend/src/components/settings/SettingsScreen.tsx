@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch } from '../../store/store';
 import { resetCount, selectTodayCount, selectIsLoading } from '../../store/slices/willCounterSlice';
 import { useAuth } from '../../contexts/AuthContext';
 import { useResponsiveDimensions } from '../../hooks/useResponsiveDimensions';
@@ -30,7 +31,7 @@ interface AppPreferences {
 const PREFERENCES_KEY = '@will_counter_preferences';
 
 const SettingsScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const todayCount = useSelector(selectTodayCount);
   const isLoading = useSelector(selectIsLoading);
   const { user, logout, loading: authLoading } = useAuth();

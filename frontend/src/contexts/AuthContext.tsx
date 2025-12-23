@@ -7,6 +7,7 @@ import { auth0Config, authEndpoints, createAuthRequest } from '../config/auth0';
 import { useDispatch } from 'react-redux';
 import { setUser, clearUser } from '../store/slices/userSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { AppDispatch } from '../store/store';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUserState] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     createAuthRequest(),
